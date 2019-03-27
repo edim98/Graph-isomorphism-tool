@@ -8,7 +8,8 @@ import time
 # * Change deletion of DLLEntry in a DLL object (use a data structure pointer where pointer[vertex] = DLLEntry which has that vertex)
 # * Optimize methods in "graph.py" (eg. change lists to heaps)
 # * Check for redundant code
-
+# * Change split_on_degrees to split_on_initial_colouring (andrei's code)
+# * Add a main refine_colour(G) method so it can be called outside this file
 
 
 # ------- Start of Data structures -------
