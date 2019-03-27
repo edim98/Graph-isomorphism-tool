@@ -31,6 +31,8 @@ import time
 
 
 
+
+
 class DLLEntry(object):
 
     # Constructor for a DLL entry
@@ -186,7 +188,7 @@ class DLL(object):
 
 
     # Adds a state to the DLL
-    def add_state(self, vertex):
+    def add_state(self, vertex, COLOUR):
         entry = DLLEntry(self.colour, vertex.label, vertex) # Create a new entry
         COLOUR[vertex.label] = self.colour # Keep track of the vertex's colour in a separate list
 
@@ -226,10 +228,15 @@ class DLL(object):
         return res
 
 # Split the vertices on initial colouring (based on Andrei's code)
-def split_on_initial_colouring(dll, initial_colouring):
-    for i in graph.vertices:
-        degree = i.degree
-        dll[degree].add_state(i) # Add this vertix to the dll with colour "degree"
+def split_on_initial_colouring(dll, graph, initial_colouring, COLOUR):
+    if initial_colouring == []:
+        for i in graph.vertices: # Split the nodes on their degree.
+            degree = i.degree
+            dll[degree].add_state(i, COLOUR) # Add this vertix to the dll with colour "degree"
+    else: # Split the nodes on initial colouring
+        for i in range(len(initial_colouring)):
+            dll[initial_colouring[i]].add_state(graph.vertices[i], COLOUR)
+
 
 # Build the "nx" list - keep track of the list of neighbours for each vertix
 def build_nx(graph):
@@ -263,7 +270,7 @@ def nicePrinting(dll):
         if d.size > 0:
             print(d)
 
-def smallest_free_colour():
+def smallest_free_colour(dll):
     for d in dll:
         if d.size == 0:
             return d.colour
@@ -273,7 +280,7 @@ def smallest_free_colour():
     return length - 1
 
 
-def refine(C): # C is a DLL
+def refine(C, G, nx, COLOUR, ourQueue, dll): # C is a DLL
     states = C.get_states()
     L = []
     visited = []
@@ -292,10 +299,10 @@ def refine(C): # C is a DLL
 
     for colour in L:
         if A[colour] < dll[colour].size: # Split up "colour"
-             l = smallest_free_colour() # Get the smallest free colour
+             l = smallest_free_colour(dll) # Get the smallest free colour
              for v in visited: # Iterate over found neighbours
                  if COLOUR[v.label] == colour: # Check that they belong to the respective colour class
-                     dll[l].add_state(v) # Add vertex to the DLL object
+                     dll[l].add_state(v, COLOUR) # Add vertex to the DLL object
                      dll[colour].remove_state(v)
              if dll[colour].size < dll[l].size:
                  ourQueue.put(colour)
@@ -315,13 +322,14 @@ def refine_colour(G, initial_colouring):
     COLOUR = [0]*(len(G)) # Keep track of the colour of each vertex
     ourQueue = Queue() # Working queue
 
-# ------- End of Data structures -------
+    # ------- End of Data structures -------
+
 
     for i in range(len(G)):
         dll.append(DLL()) # Populate the empty list with DLL objects
         dll[i].set_colour(i) # Set the colour of each DLL object
 
-    split_on_initial_colouring(dll, initial_colouring) # Add vertices based on degrees
+    split_on_initial_colouring(dll, G, initial_colouring, COLOUR) # Add vertices based on degrees
 
     nx = build_nx(G) # Construct the list of neighbours for each vertix
 
@@ -330,7 +338,7 @@ def refine_colour(G, initial_colouring):
     i = 1
     while not ourQueue.empty():
         currentColour = ourQueue.get()
-        refine(dll[currentColour])
+        refine(dll[currentColour], G, nx, COLOUR, ourQueue, dll)
         i = i + 1
 
     return dll
