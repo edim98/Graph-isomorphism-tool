@@ -12,22 +12,21 @@ def neighbourscolour(v):
                 result[i], result[j] = result[j], result[i]
     return result
 
-def coloring(G, colors = {}):
-    colour = {}
+def coloring(G, colors = []):
+    colour = [0]*len(G.vertices)
     maxcolour = -1
-    if colors == {}:
+    if colors == []:
         for i in G.vertices:
             i.colornum = 1
-            colour[i] = i.colornum
+            colour[i.label] = i.colornum
             maxcolour = max(maxcolour, i.colornum)
     else:
         colour = colors
         for i in G.vertices:
             if i in colour:
-                i.colornum = colour[i]
+                i.colornum = colour[i.label]
             else:
-                i.colornum = 1
-                colour[i] = i.colornum
+                i.colornum = colour[i.label]
             maxcolour = max(maxcolour, i.colornum)
     copy = {}
     visited = {}
@@ -43,32 +42,38 @@ def coloring(G, colors = {}):
                             maxcolour += 1
                             visited[maxcolour] = list2
                             j.colornum = maxcolour
-                            colour[j] = j.colornum
+                            colour[j.label] = j.colornum
                         else:
                             for color, list3 in visited.items():
                                 if list3 == list2:
                                     j.colornum = color
-                                    colour[j] = j.colornum
+                                    colour[j.label] = j.colornum
     return colour
 
 
 def frequencies(color1):
     maxvalue = -1
-    for i in color1.values():
+    for i in color1:
         maxvalue = max(maxvalue, i)
     frequency1 = [0]*(maxvalue + 1)
 
-    for i in color1.values():
+    for i in color1:
         frequency1[i] += 1
 
     return frequency1
 
 
+# def frequencies(G):
+#     f = [0]*len(G.vertices)
+#     for i in G.vertices:
+#         f[i.colornum] += 1
+#     return f
+
 def test_countIsomorphism():
-    with open("colorref_smallexample_4_7.grl") as f:
+    with open("colorref_smallexample_6_15.grl") as f:
         L = load_graph(f, read_list=True)
-    g = L[0][3]
-    h = L[0][1]
+    g = L[0][4]
+    h = L[0][5]
 
     c1 = coloring(g)
     c2 = coloring(h)
