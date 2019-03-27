@@ -1,10 +1,7 @@
-from graphs.graph_io import load_graph
-from project.coloring import *
-import graphs.graph
+import math
 
-from graphs.graph import Graph, Edge
-from project.coloring import isomorph, coloring
-
+from graph_io import *
+from coloring import *
 
 def disjointUnion(self, H):
     lenG = len(self.vertices)
@@ -46,119 +43,79 @@ def disjointUnion(self, H):
     return R
 
 
-def is_bijection(f1, f2):
+def bijection(f1, f2):
     for i in range(1, len(f1)):
-        if f1[i] == f2[i] and f1[i] == 1:
-            continue
-        else:
+        if (f1[i] + f2[i]) != 2:
+            return False
+    return True
+
+
+def balanced(f1, f2):
+    for i in range(1, len(f1)):
+        if f1[i] != f2[i]:
             return 0
     return 1
 
 
-def frequencies(color1):
-    maxvalue = -1
-    for i in color1.values():
-        maxvalue = max(maxvalue, i)
-    frequency1 = [0]*(maxvalue + 1)
-
-    for i in color1.values():
-        frequency1[i] += 1
-    return frequency1
-
-
-def subgraph(G, D, I):
-    R = Graph(False, 0)
-    for i in D:
-        for j in D:
-            if i != j:
-                if i.is_adjacent(j):
-                    R.add_vertex(i)
-                    R.add_vertex(j)
-                    e = Edge(i, j)
-                    R.add_edge(e)
-    for i in I:
-        for j in I:
-            if i != j:
-                if i.is_adjacent(j):
-                    R.add_vertex(i)
-                    R.add_vertex(j)
-                    e = Edge(i, j)
-                    R.add_edge(e)
-    return R
+def get_max_color(colorings):
+    res = []
+    maxi = -math.inf
+    for v, color in colorings.items():
+        if color not in res:
+            res.append(color)
+            if color > maxi:
+                maxi = color
+    return maxi
 
 
-def get_same_vertex(G, label):
-    for g in G.vertices:
-        if g.label == label:
-            return g
+def count_isomorphism(A, B, D, I):
+    max_color = 2
+    colorings1 = []*len(D)
+    colorings2 = []*len(I)
+    if D != [] and I != []:
+        for i in range(0, len(D)):
+            colorings1.append(D[i])
+            colorings2.append(I[i])
+            max_color += 1
 
+    colorings1 = coloring(A, colorings1)
+    colorings2 = coloring(B, colorings2)
 
-def countIsomorphism(G, H, A=None, B=None, D=[], I=[],):
-    if D == []:
-        A = Graph(False, 1)
-    if I == []:
-        B = Graph(False, 1)
-
-    beta_coloring = coloring(disjointUnion(A, B))
-    frequencies1, frequencies2 = isomorph(G, H)
-    is_unbalanced = (frequencies1 != frequencies2)
-    freq = frequencies(beta_coloring)
-    if is_unbalanced:
+    frequency1 = frequencies(colorings1)
+    frequency2 = frequencies(colorings2)
+    print(D, I)
+    print(frequency1, frequency2)
+    if not balanced(frequency1, frequency2):
         return 0
-    if is_bijection(frequencies1, frequencies2):
+    if bijection(frequency1, frequency2):
         return 1
-
-    chosenColor = 0
-    for i in range(len(freq)):
-        if frequencies1[i] >= 4:
+    chosenColor = -1
+    for i in range(1, len(frequency1)):
+        if (frequency1[i] + frequency2[i]) >= 4:
             chosenColor = i
             break
-    for node, color in beta_coloring.items():
-        if color == chosenColor or chosenColor == 0:
-            nodeG = get_same_vertex(G, node.label)
-            node_G = Vertex(A, nodeG.label)
-            print("ia man")
-            for g in G.vertices:
-                if g == node_G:
-                    continue
-                if G.is_adjacent(node_G, g):
-                    A.add_vertex(node_G)
-                if A.find_edge(node_G, g) == None:
-                    v = Vertex(A, g.label)
-                    e = Edge(node_G, v)
-                    A.add_edge(e)
-            D.append(node)
-            break
-
+    # chosenVertix = None
     num = 0
-
-    for node, color in beta_coloring.items():
-        if get_same_vertex(H, node.label) in H.vertices :
-            # print("man ia")
-            nodeH = get_same_vertex(H, node.label)
-            print(beta_coloring.items())
-            node_H = Vertex(B, nodeH.label)
-            for g in H.vertices:
-                if g == node_H:
-                    continue
-                if H.is_adjacent(node_H, g):
-                    B.add_vertex(node_H)
-                if B.find_edge(node_H, g) == None:
-                    v = Vertex(B, g.label)
-                    e = Edge(node_H, v)
-                    B.add_edge(e)
-            I.append(node)
-            # print(I)
-            num += countIsomorphism(G, H, A, B, D, I)
+    for vertix, color in colorings1.items():
+        if color == chosenColor and vertix not in D:
+            chosenVertix = vertix
+            D.append(chosenVertix)
+            break
+    for vertix, color in colorings2.items():
+        if color == chosenColor and vertix not in I:
+            I.append(vertix)
+            num = num + count_isomorphism(A, B, D, I)
+            I.remove(vertix)
+    D.remove(chosenVertix)
     return num
 
+
 def test_countIsomorphism():
-    with open("test_individualization/cubes3.grl") as f:
+    with open("torus24.grl") as f:
         L = load_graph(f, read_list=True)
     g = L[0][0]
-    h = L[0][1]
-    print("Number of isomorphisms found: {}".format(countIsomorphism(g, h)))
+    h = L[0][3]
+    print("Number of isomorphisms found: {}".format(count_isomorphism(g, h, [], [])))
 
 
 test_countIsomorphism()
-

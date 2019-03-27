@@ -1,5 +1,5 @@
-from graphs.graph_io import load_graph, save_graph, write_dot
-from graphs.graph import *
+from graph_io import load_graph, save_graph, write_dot
+from graph import *
 
 
 def neighbourscolour(v):
@@ -12,13 +12,23 @@ def neighbourscolour(v):
                 result[i], result[j] = result[j], result[i]
     return result
 
-def coloring(G):
+def coloring(G, colors = {}):
     colour = {}
-    maxcolour = 0
-    for i in G.vertices:
-        i.colornum = 1
-        colour[i] = i.colornum
-        maxcolour = max(maxcolour, i.colornum)
+    maxcolour = -1
+    if colors == {}:
+        for i in G.vertices:
+            i.colornum = 1
+            colour[i] = i.colornum
+            maxcolour = max(maxcolour, i.colornum)
+    else:
+        colour = colors
+        for i in G.vertices:
+            if i in colour:
+                i.colornum = colour[i]
+            else:
+                i.colornum = 1
+                colour[i] = i.colornum
+            maxcolour = max(maxcolour, i.colornum)
     copy = {}
     visited = {}
     while copy != colour:
@@ -28,11 +38,7 @@ def coloring(G):
                 if i != j and i.colornum == j.colornum:
                     list1 = neighbourscolour(i)
                     list2 = neighbourscolour(j)
-                    if list2 == list1 and copy[i] == copy[j]:
-                        # visited[copy[i]] = list1
-                        colour[i] = copy[i]
-                        colour[j] = copy[j]
-                    else:
+                    if list1 != list2:
                         if list2 not in visited.values():
                             maxcolour += 1
                             visited[maxcolour] = list2
@@ -46,22 +52,30 @@ def coloring(G):
     return colour
 
 
-def isomorph(G, G2):
-    color1 = coloring(G)
-    color2 = coloring(G2)
+def frequencies(color1):
     maxvalue = -1
     for i in color1.values():
         maxvalue = max(maxvalue, i)
     frequency1 = [0]*(maxvalue + 1)
 
-    maxvalue = -1
-    for i in color2.values():
-        maxvalue = max(maxvalue, i)
-    frequency2 = [0]*(maxvalue + 1)
-
     for i in color1.values():
         frequency1[i] += 1
 
-    for i in color2.values():
-        frequency2[i] += 1
-    return frequency1, frequency2
+    return frequency1
+
+
+def test_countIsomorphism():
+    with open("colorref_smallexample_4_7.grl") as f:
+        L = load_graph(f, read_list=True)
+    g = L[0][3]
+    h = L[0][1]
+
+    c1 = coloring(g)
+    c2 = coloring(h)
+
+    print(frequencies(c1))
+    print(frequencies(c2))
+    print(frequencies(c1) == frequencies(c2))
+    with open("graph.dot", "w") as w:
+        write_dot(h, w)
+# test_countIsomorphism()
