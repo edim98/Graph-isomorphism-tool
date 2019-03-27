@@ -5,11 +5,11 @@ import time
 
 
 # TODO LIST:
-# * Change deletion of DLLEntry in a DLL object (use a data structure pointer where pointer[vertex] = DLLEntry which has that vertex)
+# * Change deletion of DLLEntry in a DLL object (use a data structure pointer where pointer[vertex] = DLLEntry which has that vertex) -- done :)
 # * Optimize methods in "graph.py" (eg. change lists to heaps)
 # * Check for redundant code
-# * Change split_on_degrees to split_on_initial_colouring (andrei's code)
-# * Add a main refine_colour(G) method so it can be called outside this file
+# * Change split_on_degrees to split_on_initial_colouring (andrei's code) -- done
+# * Add a main refine_colour(G) method so it can be called outside this file ?? done (hopefully)
 
 
 # with open('colorref_smallexample_4_7.grl') as f:
@@ -18,7 +18,15 @@ import time
 # # with open('test.gr') as f:
 #     Glist = load_graph(f, read_list = True)
 
+# ------- Start of Data structures -------
+pointer = []
+dll = [] # List of DLL objects
+nx = [] # List of neighbours
+INQUEUE = [] # Keep track of elements in queue
+COLOUR = [] # Keep track of the colour of each vertex
+ourQueue = Queue() # Working queue
 
+# ------- End of Data structures -------
 
 
 # G = Glist[0][0]
@@ -134,49 +142,21 @@ class DLL(object):
 
     # Removes a state from this DLL
     def remove_state(self, vertex):
-        p = self.start
-
-        while p != self.end:
-            if p.vertex.label == vertex.label: # Find the vertex to be removed
-                if self.size == 1: # If the size of the list is 1
-                    self.set_start(None) # Set all fields as none
-                    self.set_end(None)
-                    self.set_size(0) # Set size as 0
-
-                elif self.size == 2: # If only two elements are in the list
-                    self.set_start(p.right) # Set start and end at the element not deleted
-                    self.set_end(p.right)
-                    p.left.set_right(p.right)
-                    p.right.set_left(p.left)
-
-                    self.set_size(1) # Set size to 1
-                else: # Multiple elements
-                    p.left.set_right(p.right) # Change left / right relationships
-                    p.right.set_left(p.left)
-                    if self.start == p:
-                        self.set_start(self.start.right)
-                    if self.end == p:
-                        self.set_end(self.end.left)
-                    self.set_size(self.size - 1)
-
-                p = None # Delete entry
-                return
-            p = p.right
-
-        if p.vertex.label == vertex.label:
-            if self.size == 1:
-                self.set_start(None)
+        p = pointer[vertex.label]
+        if p is not None:
+            if self.size == 1: # If the size of the list is 1
+                self.set_start(None) # Set all fields as none
                 self.set_end(None)
-                self.set_size(0)
+                self.set_size(0) # Set size as 0
 
-            elif self.size == 2:
-                self.set_start(p.right)
+            elif self.size == 2: # If only two elements are in the list
+                self.set_start(p.right) # Set start and end at the element not deleted
                 self.set_end(p.right)
                 p.left.set_right(p.right)
                 p.right.set_left(p.left)
 
-                self.set_size(1)
-            else:
+                self.set_size(1) # Set size to 1
+            else: # Multiple elements
                 p.left.set_right(p.right) # Change left / right relationships
                 p.right.set_left(p.left)
                 if self.start == p:
@@ -184,11 +164,14 @@ class DLL(object):
                 if self.end == p:
                     self.set_end(self.end.left)
                 self.set_size(self.size - 1)
-            p = None
+
+            p = None # Delete entry
+            pointer[vertex.label] = None
+            return
 
 
     # Adds a state to the DLL
-    def add_state(self, vertex, COLOUR):
+    def add_state(self, vertex):
         entry = DLLEntry(self.colour, vertex.label, vertex) # Create a new entry
         COLOUR[vertex.label] = self.colour # Keep track of the vertex's colour in a separate list
 
@@ -216,6 +199,7 @@ class DLL(object):
             self._end = entry # The end is now the new entry.
 
         self._size += 1 # Increment size of DLL
+        pointer[vertex.label] = entry
 
     # Return the states of this list
     def get_states(self):
@@ -228,22 +212,20 @@ class DLL(object):
         return res
 
 # Split the vertices on initial colouring (based on Andrei's code)
-def split_on_initial_colouring(dll, graph, initial_colouring, COLOUR):
+def split_on_initial_colouring(dll, graph, initial_colouring):
     if initial_colouring == []:
         for i in graph.vertices: # Split the nodes on their degree.
             degree = i.degree
-            dll[degree].add_state(i, COLOUR) # Add this vertix to the dll with colour "degree"
+            dll[degree].add_state(i) # Add this vertix to the dll with colour "degree"
     else: # Split the nodes on initial colouring
         for i in range(len(initial_colouring)):
-            dll[initial_colouring[i]].add_state(graph.vertices[i], COLOUR)
+            dll[initial_colouring[i]].add_state(graph.vertices[i])
 
 
 # Build the "nx" list - keep track of the list of neighbours for each vertix
 def build_nx(graph):
-    res = [0]*(len(graph))
     for i in graph.vertices:
-        res[i.label] = i.neighbours
-    return res
+        nx[i.label] = i.neighbours
 
 # Build our working queue
 def buildQueue(dll, ourQueue, INQUEUE):
@@ -270,7 +252,7 @@ def nicePrinting(dll):
         if d.size > 0:
             print(d)
 
-def smallest_free_colour(dll):
+def smallest_free_colour():
     for d in dll:
         if d.size == 0:
             return d.colour
@@ -280,7 +262,7 @@ def smallest_free_colour(dll):
     return length - 1
 
 
-def refine(C, G, nx, COLOUR, ourQueue, dll): # C is a DLL
+def refine(C, G): # C is a DLL
     states = C.get_states()
     L = []
     visited = []
@@ -299,11 +281,11 @@ def refine(C, G, nx, COLOUR, ourQueue, dll): # C is a DLL
 
     for colour in L:
         if A[colour] < dll[colour].size: # Split up "colour"
-             l = smallest_free_colour(dll) # Get the smallest free colour
+             l = smallest_free_colour() # Get the smallest free colour
              for v in visited: # Iterate over found neighbours
                  if COLOUR[v.label] == colour: # Check that they belong to the respective colour class
-                     dll[l].add_state(v, COLOUR) # Add vertex to the DLL object
                      dll[colour].remove_state(v)
+                     dll[l].add_state(v) # Add vertex to the DLL object
              if dll[colour].size < dll[l].size:
                  ourQueue.put(colour)
              else:
@@ -314,31 +296,25 @@ def refine(C, G, nx, COLOUR, ourQueue, dll): # C is a DLL
 
 def refine_colour(G, initial_colouring):
 
-    # ------- Start of Data structures -------
-
-    dll = [] # List of DLL objects
-    nx = [] # List of neighbours
-    INQUEUE = [0]*(len(G)) # Keep track of elements in queue
-    COLOUR = [0]*(len(G)) # Keep track of the colour of each vertex
-    ourQueue = Queue() # Working queue
-
-    # ------- End of Data structures -------
-
-
     for i in range(len(G)):
         dll.append(DLL()) # Populate the empty list with DLL objects
         dll[i].set_colour(i) # Set the colour of each DLL object
+        INQUEUE.append(0)
+        COLOUR.append(-1)
+        pointer.append(None)
+        nx.append(None)
 
-    split_on_initial_colouring(dll, G, initial_colouring, COLOUR) # Add vertices based on degrees
+    split_on_initial_colouring(dll, G, initial_colouring) # Add vertices based on degrees
 
-    nx = build_nx(G) # Construct the list of neighbours for each vertix
+    build_nx(G) # Construct the list of neighbours for each vertix
 
     buildQueue(dll, ourQueue, INQUEUE)
 
     i = 1
     while not ourQueue.empty():
         currentColour = ourQueue.get()
-        refine(dll[currentColour], G, nx, COLOUR, ourQueue, dll)
+        # print('Refining with current colour: ', currentColour)
+        refine(dll[currentColour], G)
         i = i + 1
 
     return dll
