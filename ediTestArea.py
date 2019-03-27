@@ -5,7 +5,7 @@ import time
 
 startTime = time.time()
 
-with open('threepaths10240.gr') as f:
+with open('threepaths5.gr') as f:
     G = load_graph(f)
 
 res = refine_colour(G, [])
@@ -13,5 +13,5 @@ res = refine_colour(G, [])
 endTime = time.time()
 
 print('Time taken : ', endTime - startTime)
-# nicePrinting(res)
+nicePrinting(res)
 # print(G)

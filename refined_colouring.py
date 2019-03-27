@@ -254,7 +254,7 @@ def nicePrinting(dll):
 
 def smallest_free_colour():
     for d in dll:
-        if d.size == 0:
+        if d.size == 0 and d.colour != 0:
             return d.colour
     dll.append(DLL())
     length = len(dll)
@@ -296,7 +296,7 @@ def refine(C, G): # C is a DLL
 
 def refine_colour(G, initial_colouring):
 
-    for i in range(len(G)):
+    for i in range(len(G)+1):
         dll.append(DLL()) # Populate the empty list with DLL objects
         dll[i].set_colour(i) # Set the colour of each DLL object
         INQUEUE.append(0)
