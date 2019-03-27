@@ -12,30 +12,24 @@ import time
 # * Add a main refine_colour(G) method so it can be called outside this file
 
 
-# ------- Start of Data structures -------
 # with open('colorref_smallexample_4_7.grl') as f:
 # with open('colorref_smallexample_2_49.grl') as f:
-with open('threepaths10240.gr') as f:
-# with open('test.gr') as f:
-    Glist = load_graph(f, read_list = True)
+# with open('threepaths10240.gr') as f:
+# # with open('test.gr') as f:
+#     Glist = load_graph(f, read_list = True)
 
 
 
 
-G = Glist[0][0]
+# G = Glist[0][0]
+#
+# with open('output.dot', 'w') as g:
+#     write_dot(G, g)
 
-with open('output.dot', 'w') as g:
-    write_dot(G, g)
+# startTime = time.time()
 
-startTime = time.time()
 
-dll = [] # List of DLL objects
-nx = [] # List of neighbours
-INQUEUE = [0]*(len(G)) # Keep track of elements in queue
-COLOUR = [0]*(len(G)) # Keep track of the colour of each vertex
-ourQueue = Queue() # Working queue
 
-# ------- End of Data structures -------
 
 class DLLEntry(object):
 
@@ -231,8 +225,8 @@ class DLL(object):
         res.append(self.end)
         return res
 
-# Split the vertices on degrees
-def split_on_degrees(dll, graph):
+# Split the vertices on initial colouring (based on Andrei's code)
+def split_on_initial_colouring(dll, initial_colouring):
     for i in graph.vertices:
         degree = i.degree
         dll[degree].add_state(i) # Add this vertix to the dll with colour "degree"
@@ -310,38 +304,33 @@ def refine(C): # C is a DLL
 
 
             # If this happens, then split up dll[colour] by adding the vertices with colour "colour" to a new DLL
-            # C
 
+def refine_colour(G, initial_colouring):
 
+    # ------- Start of Data structures -------
 
+    dll = [] # List of DLL objects
+    nx = [] # List of neighbours
+    INQUEUE = [0]*(len(G)) # Keep track of elements in queue
+    COLOUR = [0]*(len(G)) # Keep track of the colour of each vertex
+    ourQueue = Queue() # Working queue
 
-for i in range(len(G)):
-    dll.append(DLL()) # Populate the empty list with DLL objects
-    dll[i].set_colour(i) # Set the colour of each DLL object
+# ------- End of Data structures -------
 
-split_on_degrees(dll, G) # Add vertices based on degrees
+    for i in range(len(G)):
+        dll.append(DLL()) # Populate the empty list with DLL objects
+        dll[i].set_colour(i) # Set the colour of each DLL object
 
-# nicePrinting(dll)
+    split_on_initial_colouring(dll, initial_colouring) # Add vertices based on degrees
 
-nx = build_nx(G) # Construct the list of neighbours for each vertix
+    nx = build_nx(G) # Construct the list of neighbours for each vertix
 
-# print('nx: ', nx)
-buildQueue(dll, ourQueue, INQUEUE)
+    buildQueue(dll, ourQueue, INQUEUE)
 
+    i = 1
+    while not ourQueue.empty():
+        currentColour = ourQueue.get()
+        refine(dll[currentColour])
+        i = i + 1
 
-# print('ourQueue: ', ourQueue)
-# print('INQUEUE: ', INQUEUE)
-# print('COLOUR: ', COLOUR)
-
-
-i = 1
-while not ourQueue.empty():
-    currentColour = ourQueue.get()
-    refine(dll[currentColour])
-    # print('COLOUR after %d refinements: %s' % (i, COLOUR))
-    i = i + 1
-
-print('Number of colours: ', len(G))
-endTime = time.time()
-print('Time spent: ', endTime - startTime)
-# nicePrinting(dll)
+    return dll
