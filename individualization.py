@@ -2,6 +2,7 @@ import math
 
 from graph_io import *
 from coloring import *
+from refined_colouring import *
 
 def disjointUnion(self, H):
     lenG = len(self.vertices)
@@ -75,9 +76,11 @@ def get_max_color(colorings):
 
 def count_isomorphism(A, B, D, I):
     max_color = 2
-    colorings1 = [0]*len(A.vertices)
-    colorings2 = [0]*len(B.vertices)
+    colorings1 = []
+    colorings2 = []
     if D != [] and I != []:
+        colorings1 = [0] * len(A.vertices)
+        colorings2 = [0] * len(B.vertices)
         for i in A.vertices:
             if i not in D:
                 colorings1[i.label] = 1
@@ -93,16 +96,17 @@ def count_isomorphism(A, B, D, I):
                 max_color += 1
 
 
-    colorings1 = coloring(A, colorings1)
-    colorings2 = coloring(B, colorings2)
+    colorings1 = refine_colour(A, colorings1)
+    colorings2 = refine_colour(B, colorings2)
 
     frequency1 = frequencies(colorings1)
     frequency2 = frequencies(colorings2)
     print(frequency1, frequency2)
-    if not balanced(frequency1, frequency2):
-        return 0
-    if bijection(frequency1, frequency2):
-        return 1
+    if D != [] and I != []:
+        if not balanced(frequency1, frequency2):
+            return 0
+        if bijection(frequency1, frequency2):
+            return 1
     chosenColor = -1
     for i in range(1, len(frequency1)):
         if (frequency1[i] + frequency2[i]) >= 4:
@@ -129,10 +133,10 @@ def count_isomorphism(A, B, D, I):
 
 
 def test_countIsomorphism():
-    with open("torus24.grl") as f:
+    with open("cubes6.grl") as f:
         L = load_graph(f, read_list=True)
     g = L[0][0]
-    h = L[0][3]
+    h = L[0][1]
     print("Number of isomorphisms found: {}".format(count_isomorphism(g, h, [], [])))
 
 
