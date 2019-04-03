@@ -120,7 +120,7 @@ def count_isomorphism(A, B, D, I):
                 chosenVertex = vertex
                 D.append(chosenVertex)
                 break
-    print(chosenVertex)
+    # print(chosenVertex)
     for i in range(len(colorings2)):
         if colorings2[i] == chosenColor:
             vertex = get_vertex_by_label(B, i)
