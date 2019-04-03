@@ -218,7 +218,7 @@ def split_on_initial_colouring(dll, graph, initial_colouring):
             degree = i.degree
             dll[degree].add_state(i) # Add this vertix to the dll with colour "degree"
     else: # Split the nodes on initial colouring
-        for i in range(len(initial_colouring)):
+        for i in range(1, len(initial_colouring)):
             dll[initial_colouring[i]].add_state(graph.vertices[i])
 
 
@@ -251,6 +251,16 @@ def nicePrinting(dll):
     for d in dll:
         if d.size > 0:
             print(d)
+
+def colourGraph(dll, G):
+    for d in dll:
+        if d.size > 0:
+            p = d.start
+            while p != d.end:
+                G.vertices[p.state - 1].label = d.colour
+                p = p.right
+            G.vertices[d.end.state - 1].label = d.colour
+    return G
 
 def smallest_free_colour():
     for d in dll:
