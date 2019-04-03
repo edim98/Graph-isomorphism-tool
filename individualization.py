@@ -76,57 +76,55 @@ def get_max_color(colorings):
 
 def count_isomorphism(A, B, D, I):
     max_color = 2
-    colorings1 = []
-    colorings2 = []
-    if D != [] and I != []:
-        colorings1 = [0] * len(A.vertices)
-        colorings2 = [0] * len(B.vertices)
-        for i in A.vertices:
-            if i not in D:
-                colorings1[i.label] = 1
-            else:
-                colorings1[i.label] = max_color
-                max_color += 1
-        max_color = 2
-        for i in B.vertices:
-            if i not in I:
-                colorings2[i.label] = 1
-            else:
-                colorings2[i.label] = max_color
-                max_color += 1
+    colorings1 = [0] * len(A.vertices)
+    colorings2 = [0] * len(B.vertices)
+    for i in A.vertices:
+        if i not in D:
+            colorings1[i.label] = 1
+        else:
+            colorings1[i.label] = max_color
+            max_color += 1
+    max_color = 2
+    for i in B.vertices:
+        if i not in I:
+            colorings2[i.label] = 1
+        else:
+            colorings2[i.label] = max_color
+            max_color += 1
+
     colorings1 = refine_colour(A, colorings1)
     colorings2 = refine_colour(B, colorings2)
-    # print(colorings1, colorings2)
+
     frequency1 = frequencies(colorings1)
     frequency2 = frequencies(colorings2)
     print(frequency1, frequency2)
-    if D != [] and I != []:
-        if not balanced(frequency1, frequency2):
-            return 0
-        if bijection(frequency1, frequency2):
-            return 1
+    # if D != [] and I != []:
+    if not balanced(frequency1, frequency2):
+        return 0
+    if bijection(frequency1, frequency2):
+        return 1
     chosenColor = -1
     for i in range(1, len(frequency1)):
         if (frequency1[i] + frequency2[i]) >= 4:
             chosenColor = i
             break
-    # chosenVertix = None
+    chosenVertex = None
     num = 0
     for i in range(0, len(colorings1)):
         if colorings1[i] == chosenColor:
-            vertix = get_vertex_by_label(A, i)
-            if vertix not in D:
-                chosenVertix = vertix
-                D.append(chosenVertix)
+            vertex = get_vertex_by_label(A, i)
+            if vertex not in D:
+                chosenVertex = vertex
+                D.append(chosenVertex)
                 break
     for i in range(0, len(colorings2)):
         if colorings2[i] == chosenColor:
-            vertix = get_vertex_by_label(B, i)
-            if vertix not in I:
-                I.append(vertix)
+            vertex = get_vertex_by_label(B, i)
+            if vertex not in I:
+                I.append(vertex)
                 num = num + count_isomorphism(A, B, D, I)
-                I.remove(vertix)
-    D.remove(chosenVertix)
+                I.remove(vertex)
+    D.remove(chosenVertex)
     return num
 
 
