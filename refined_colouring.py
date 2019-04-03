@@ -12,11 +12,11 @@ import time
 # * Add a main refine_colour(G) method so it can be called outside this file ?? done (hopefully)
 
 
-# with open('colorref_smallexample_4_7.grl') as f:
-# with open('colorref_smallexample_2_49.grl') as f:
+with open('colorref_smallexample_4_7.grl') as f:
+# with open('colorref_smallexample_6_15.grl') as f:
 # with open('threepaths10240.gr') as f:
-# # with open('test.gr') as f:
-#     Glist = load_graph(f, read_list = True)
+# with open('test.gr') as f:
+    Glist = load_graph(f, read_list = True)
 
 # ------- Start of Data structures -------
 pointer = []
@@ -29,10 +29,10 @@ ourQueue = Queue() # Working queue
 # ------- End of Data structures -------
 
 
-# G = Glist[0][0]
-#
-# with open('output.dot', 'w') as g:
-#     write_dot(G, g)
+G = Glist[0][0]
+
+with open('output.dot', 'w') as g:
+    write_dot(G, g)
 
 # startTime = time.time()
 
@@ -252,6 +252,17 @@ def nicePrinting(dll):
         if d.size > 0:
             print(d)
 
+def colourGraph(dll, G):
+    for d in dll:
+        if d.size > 0:
+            p = d.start
+            while p != d.end:
+                G.vertices[p.state].colornum = d.colour
+                # print(G.vertices[p.state-1].colornum)
+                p = p.right
+            G.vertices[d.end.state].colornum = d.colour
+    return G
+
 def smallest_free_colour():
     for d in dll:
         if d.size == 0 and d.colour != 0:
@@ -296,7 +307,7 @@ def refine(C, G): # C is a DLL
 
 def refine_colour(G, initial_colouring):
 
-    for i in range(len(G)+1):
+    for i in range(len(G)):
         dll.append(DLL()) # Populate the empty list with DLL objects
         dll[i].set_colour(i) # Set the colour of each DLL object
         INQUEUE.append(0)
@@ -316,5 +327,17 @@ def refine_colour(G, initial_colouring):
         # print('Refining with current colour: ', currentColour)
         refine(dll[currentColour], G)
         i = i + 1
+    colors = [0]*(len(G.vertices))
+    for i in dll:
+        p = i.start
+        # print(p)
+        if i.size > 1:
+            while p != i.end:
+                colors[p.vertex.label] = i.colour
+                p = p.right
+            colors[p.vertex.label] = i.colour
+        elif i.size == 1:
+            colors[p.vertex.label] = i.colour
 
-    return dll
+    return colors
+# print(refine_colour(G, []))
