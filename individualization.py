@@ -94,11 +94,9 @@ def count_isomorphism(A, B, D, I):
             else:
                 colorings2[i.label] = max_color
                 max_color += 1
-
-
     colorings1 = refine_colour(A, colorings1)
     colorings2 = refine_colour(B, colorings2)
-
+    # print(colorings1, colorings2)
     frequency1 = frequencies(colorings1)
     frequency2 = frequencies(colorings2)
     print(frequency1, frequency2)
