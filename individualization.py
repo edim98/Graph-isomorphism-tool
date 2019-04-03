@@ -100,7 +100,7 @@ def count_isomorphism(A, B, D, I):
 
     frequency1 = frequencies(colorings1)
     frequency2 = frequencies(colorings2)
-    print(frequency1, frequency2)
+    # print(frequency1, frequency2)
     # if D != [] and I != []:
     if not balanced(frequency1, frequency2):
         return 0
@@ -133,10 +133,10 @@ def count_isomorphism(A, B, D, I):
 
 
 def test_countIsomorphism():
-    with open("test.gr") as f:
-        L = load_graph(f)
-    with open("test.gr") as g:
-        H = load_graph(g)
+    with open("trees36.grl") as f:
+        G = load_graph(f, read_list = True)
+    L = G[0][3]
+    H = G[0][5]
     print("Number of isomorphisms found: {}".format(count_isomorphism(L, H, [], [])))
 
 

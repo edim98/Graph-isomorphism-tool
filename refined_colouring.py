@@ -308,8 +308,20 @@ def refine(C, G): # C is a DLL
 
             # If this happens, then split up dll[colour] by adding the vertices with colour "colour" to a new DLL
 
-def dllToList(dll):
-    
+def dllToList(dll, G):
+    colors = [0] * (len(G.vertices))
+    for i in dll:
+        p = i.start
+        # print(p)
+        if i.size > 1:
+            while p != i.end:
+                colors[p.vertex.label] = i.colour
+                p = p.right
+            colors[p.vertex.label] = i.colour
+        elif i.size == 1:
+            colors[p.vertex.label] = i.colour
+
+    return colors
 
 
 def refine_colour(G, initial_colouring):
@@ -346,4 +358,4 @@ def refine_colour(G, initial_colouring):
         refine(dll[currentColour], G)
         i = i + 1
 
-    return dllToList(dll)
+    return dllToList(dll, G)
