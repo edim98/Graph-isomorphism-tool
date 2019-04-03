@@ -120,7 +120,6 @@ def count_isomorphism(A, B, D, I):
                 chosenVertex = vertex
                 D.append(chosenVertex)
                 break
-    print(chosenVertex)
     for i in range(len(colorings2)):
         if colorings2[i] == chosenColor:
             vertex = get_vertex_by_label(B, i)
@@ -133,7 +132,7 @@ def count_isomorphism(A, B, D, I):
 
 
 def test_countIsomorphism():
-    with open("cubes3.grl") as f:
+    with open("cubes6.grl") as f:
         L = load_graph(f, read_list=True)
     g = L[0][0]
     h = L[0][1]
