@@ -233,14 +233,17 @@ def buildQueue(dll, ourQueue, INQUEUE):
     maxsize = 0
     maxpointer = 0
     k = 0
+    diffColours = 0
     for l in dll:
         if l.size > 0:
             if maxsize < l.size:
                 maxsize = l.size
                 maxpointer = k # Keep track of the position of the dll with largest number of elements
             k += 1
+            diffColours += 1
             aux.append(l.colour) # Add each list to the queue
-    aux.pop(maxpointer) # Remove the list with largest number of elements.
+    if diffColours > 1:
+        aux.pop(maxpointer) # Remove the list with largest number of elements.
     INQUEUE[maxpointer] = 0
     for i in aux:
         INQUEUE[i] = 1 # Keep track of elements in queue
