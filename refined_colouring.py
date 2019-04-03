@@ -308,6 +308,10 @@ def refine(C, G): # C is a DLL
 
             # If this happens, then split up dll[colour] by adding the vertices with colour "colour" to a new DLL
 
+def dllToList(dll):
+    
+
+
 def refine_colour(G, initial_colouring):
     global dll
     global INQUEUE
@@ -342,4 +346,4 @@ def refine_colour(G, initial_colouring):
         refine(dll[currentColour], G)
         i = i + 1
 
-    return dll
+    return dllToList(dll)
