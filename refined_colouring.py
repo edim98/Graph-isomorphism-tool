@@ -218,7 +218,7 @@ def split_on_initial_colouring(dll, graph, initial_colouring):
             degree = i.degree
             dll[degree].add_state(i) # Add this vertix to the dll with colour "degree"
     else: # Split the nodes on initial colouring
-        for i in range(1, len(initial_colouring)):
+        for i in range(len(initial_colouring)):
             dll[initial_colouring[i]].add_state(graph.vertices[i])
 
 
@@ -257,9 +257,10 @@ def colourGraph(dll, G):
         if d.size > 0:
             p = d.start
             while p != d.end:
-                G.vertices[p.state - 1].label = d.colour
+                G.vertices[p.state].colornum = d.colour
+                # print(G.vertices[p.state-1].colornum)
                 p = p.right
-            G.vertices[d.end.state - 1].label = d.colour
+            G.vertices[d.end.state].colornum = d.colour
     return G
 
 def smallest_free_colour():
@@ -306,7 +307,7 @@ def refine(C, G): # C is a DLL
 
 def refine_colour(G, initial_colouring):
 
-    for i in range(len(G)+1):
+    for i in range(len(G)):
         dll.append(DLL()) # Populate the empty list with DLL objects
         dll[i].set_colour(i) # Set the colour of each DLL object
         INQUEUE.append(0)
