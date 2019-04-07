@@ -57,6 +57,8 @@ def bijection(f1, f2):
 
 
 def balanced(f1, f2):
+    if len(f1) != len(f2):
+        return 0
     for i in range(1, len(f1)):
         if f1[i] != f2[i]:
             return 0
@@ -76,27 +78,44 @@ def get_max_color(colorings):
 
 def count_isomorphism(A, B, D, I):
     max_color = 1
-    colorings1 = []
-    colorings2 = []
+    colorings1 = [0] * len(A.vertices)
+    colorings2 = [0] * len(B.vertices)
     if D != [] and I != []:
-        colorings1 = [0] * len(A.vertices)
-        colorings2 = [0] * len(B.vertices)
-        for i in A.vertices:
-            if i not in D:
-                colorings1[i.label] = 0
-            else:
-                colorings1[i.label] = max_color
-                max_color += 1
-        max_color = 1
-        for i in B.vertices:
-            if i not in I:
-                colorings2[i.label] = 0
-            else:
-                colorings2[i.label] = max_color
-                max_color += 1
+        # colorings1mama = [0] * len(A.vertices)
+        # colorings2mama = [0] * len(B.vertices)
+        for i in D:
+            colorings1[i.label] = max_color
+            max_color += 1
+        # max_color = 1
+        # for i in A.vertices:
+        #     if i not in D:
+        #         colorings1mama[i.label] = 0
+        #     else: # i in D && i in A.vertices
+        #         colorings1mama[i.label] = max_color
+        #         max_color += 1
 
-    colorings1 = refine_colour(A, colorings1)
-    colorings2 = refine_colour(B, colorings2)
+
+        max_color = 1
+        for j in I:
+            colorings2[j.label] = max_color
+            max_color += 1
+
+        # max_color = 1
+        # for i in B.vertices:
+        #     if i not in I:
+        #         colorings2mama[i.label] = 0
+        #     else:
+        #         colorings2mama[i.label] = max_color
+        #         max_color += 1
+
+        # if colorings1 != colorings1mama:
+        #     print('plm de pseudocod')
+        # if colorings2 != colorings2mama:
+        #     print('plm de pseudocod 2')
+        #     print(colorings2)
+        #     print(colorings2mama)
+        colorings1 = refine_colour(A, colorings1)
+        colorings2 = refine_colour(B, colorings2)
 
     frequency1 = frequencies(colorings1)
     frequency2 = frequencies(colorings2)
@@ -104,30 +123,41 @@ def count_isomorphism(A, B, D, I):
     # if D != [] and I != []:
     if not balanced(frequency1, frequency2):
         return 0
+
     if bijection(frequency1, frequency2):
+        print('-------\n')
+        print(colorings1)
+        print(colorings2)
+        print('--------\n')
         return 1
+
     chosenColor = -1
     for i in range(len(frequency1)):
         if (frequency1[i] + frequency2[i]) >= 4:
             chosenColor = i
             break
-    chosenVertex = None
     num = 0
+
+    chosenVertex = None
     for i in range(len(colorings1)):
         if colorings1[i] == chosenColor:
-            vertex = get_vertex_by_label(A, i)
+            # vertex = get_vertex_by_label(A, i)
+            vertex = A.vertices[i]
             if vertex not in D:
                 chosenVertex = vertex
-                D.append(chosenVertex)
+                D.append(vertex)
                 break
     # print(chosenVertex)
     for i in range(len(colorings2)):
         if colorings2[i] == chosenColor:
-            vertex = get_vertex_by_label(B, i)
+            # vertex = get_vertex_by_label(B, i)
+            vertex = B.vertices[i]
             if vertex not in I:
-                I.append(vertex)
-                num = num + count_isomorphism(A, B, D, I)
-                I.remove(vertex)
+                if vertex.degree == chosenVertex.degree:
+                    I.append(vertex)
+                    num = num + count_isomorphism(A, B, D, I)
+                    I.remove(vertex)
+
     D.remove(chosenVertex)
     return num
 
@@ -141,4 +171,4 @@ def test_countIsomorphism():
 
 
 
-test_countIsomorphism()
+# test_countIsomorphism()
