@@ -63,6 +63,8 @@ def frequencies(color1):
     return frequency1
 
 
+
+
 # def frequencies(G):
 #     f = [0]*len(G.vertices)
 #     for i in G.vertices:
