@@ -63,17 +63,6 @@ def balanced(f1, f2):
     return 1
 
 
-def get_max_color(colorings):
-    res = []
-    maxi = -math.inf
-    for v, color in colorings.items():
-        if color not in res:
-            res.append(color)
-            if color > maxi:
-                maxi = color
-    return maxi
-
-
 def count_isomorphism(A, B, D, I):
     max_color = 1
     colorings1 = []
