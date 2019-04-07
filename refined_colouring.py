@@ -358,4 +358,6 @@ def refine_colour(G, initial_colouring):
         refine(dll[currentColour], G)
         i = i + 1
 
-    return dllToList(dll, G)
+    colourGraph(dll, G)
+
+    return dllToList(dll, G), nx
