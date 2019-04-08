@@ -413,3 +413,74 @@ class UnsafeGraph(Graph):
 
     def is_adjacent(self, u: "Vertex", v: "Vertex") -> bool:
         return v in u._incidence or (not self._directed and u in v._incidence)
+
+def __add__(G, H):
+    lenG = len(G.vertices)
+    lenH = len(H.vertices)
+    eG = G.edges
+    eH = H.edges
+    R = Graph(False, lenG + lenH)
+
+    for i in range(lenG):
+        for j in range(i, lenG):
+            if i == j:
+                continue
+            elif G.vertices[i].is_adjacent(G.vertices[j]):
+                edge_g = Edge(G.vertices[i], G.vertices[j])
+
+                for e in eG:
+                    if edge_g.tail == e.tail and edge_g.head == e.head:
+                        edge = Edge(R.vertices[j], R.vertices[i])
+                        R.add_edge(edge)
+                        print("!G: connect edge {} and edge {}".format(j, i))
+                    elif edge_g.tail == e.head and edge_g.head == e.tail:
+                        edge = Edge(R.vertices[i], R.vertices[j])
+                        R.add_edge(edge)
+                        print("G: connect edge {} and edge {}".format(i, j))
+
+
+    for i in range(lenH):
+        for j in range(i, lenH):
+            if i == j:
+                continue
+            elif H.vertices[i].is_adjacent(H.vertices[j]):
+                edge_h = Edge(H.vertices[i], H.vertices[j])
+
+                for e in eH:
+                    if edge_h.tail == e.tail and edge_h.head == e.head:
+                        edge = Edge(R.vertices[lenG + j], R.vertices[lenG + i])
+                        R.add_edge(edge)
+                        print("!H: connect edge {} and edge {}".format(j, i))
+                    elif edge_h.tail == e.head and edge_h.head == e.tail:
+                        edge = Edge(R.vertices[lenG + i], R.vertices[lenG + j])
+                        R.add_edge(edge)
+                        print("H: connect edge {} and edge {}".format(i, j))
+
+    return R
+#
+# def complement():
+#     with open('examplegraph.gr') as f:
+#         g = load_graph(f)
+#     result = Graph(False, len(g.vertices))
+#     for i in range(len(g.vertices)):
+#         for j in range(i, len(g.vertices)):
+#             if i != j:
+#                 if not(g.vertices[i].is_adjacent(g.vertices[j])):
+#                     e = Edge(result.vertices[i], result.vertices[j])
+#                     result.add_edge(e)
+#     with open('examplegraph3.gr', 'w') as f:
+#         save_graph(result, f)
+#     print(result)
+#
+# def convert(G):
+#     with open('mygraph.dot', 'w') as f:
+#         write_dot(G, f)
+#
+# def test_disjoint():
+#
+#     G = ex1.f1(3)
+#     H = ex1.f1(3)
+#     print("G: {}\nH: {}".format(G.edges,H.edges))
+#     R = G + H
+#     print("Vertices: {} \nEdges: {}".format(R.vertices, R.edges))
+#     print(R)
