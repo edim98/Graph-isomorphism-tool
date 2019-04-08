@@ -360,4 +360,4 @@ def refine_colour(G, initial_colouring):
 
     colourGraph(dll, G)
 
-    return dllToList(dll, G)
+    return dllToList(dll, G), dll

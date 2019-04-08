@@ -48,6 +48,7 @@ def frequencies(colorings):
 def count_isomorphism(G, D, I):
     max_color = 1
     colorings = [0] * len(G.vertices)
+    dll = None
     if D != [] and I != []:
         for i in D:
             colorings[i.label] = max_color
@@ -58,7 +59,7 @@ def count_isomorphism(G, D, I):
         for j in I:
             colorings[j.label] = max_color
             max_color += 1
-        colorings = refine_colour(G, colorings)
+        colorings, dll = refine_colour(G, colorings)
 
     frequency = frequencies(colorings)
 
