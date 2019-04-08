@@ -50,4 +50,43 @@ def test_compute_order():
     G = Graph(False, 6)
     print("Order:",compute_order(H, G))
 
+def generate_automorphism(G1, G2, D, I, coloring, nodes_visited, generator=[]):
+    if coloring.is_unbalanced(D, I): #TODO
+        # There is no automorphism that follows (D, I)!
+        return "No automorphism found: Coloring is unbalanced."
 
+    current_node = nodes_visited[len(nodes_visited)-1]
+    disjoint_union = disjointUnion(G1, G2)
+    if coloring.defines_bijection():
+        # There exists a unique automorphism that follows (D, I)!
+        f = coloring.to_permutation(G1, G2) #TODO
+        if is_permutation_new(f, generator, G1):
+            generator.append(f)
+
+            for i in range(len(nodes_visited)-2, -1, -1):
+                if nodes_visited[i].is_ancestor_of(current_node): #TODO: .is_ancestor_of (possibly a tree structure or something)
+                    nodes_visited = nodes_visited[:i]
+                    D = D[:i]
+                    I = I[:i] #might not keep I accurate
+                    coloring = disjoint_union.get_coloring(D, I) # get_coloring() equivalent
+
+                    generate_automorphism(G1, G2, D, I, coloring, nodes_visited, generator)
+                    break
+
+    big_color_classes = get_color_classes(coloring, 2) # |C| >=2 or |C| >=4 #TODO
+    chosen_color = choose_color_class(big_color_classes) # Try big ones first. #TODO
+    chosen_vertex = choose_vertext(chosen_color) # Random choice is still OK. Try not to choose a previous node # TODO
+
+    nodes_visited.append(chosen_vertex)
+    y = chosen_vertex # first try y == x ("if possible"?)
+    D.append(chosen_vertex)
+    I.append(y)
+    coloring = disjoint_union.get_coloring(D, I) # get_coloring() equivalent
+    generate_automorphism(G1, G2, D, I, coloring, nodes_visited, generator)
+    chosen_color.remove(chosen_vertex) # try the rest of the nodes in that color class
+    for j in chosen_color.vertices: #TODO: the .vertices stuff somehow
+        I.append(j)
+        coloring = disjoint_union.get_coloring(D, I) # get_coloring() equivalent
+        generate_automorphism(G1, G2, D, I, coloring, nodes_visited, generator)
+
+    return generator
