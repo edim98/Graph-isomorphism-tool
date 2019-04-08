@@ -1,53 +1,58 @@
 import math
 
 from graph_io import *
-from coloring import *
 from refined_colouring import *
 
-def disjointUnion(self, H):
-    lenG = len(self.vertices)
-    lenH = len(H.vertices)
-    eG = self.edges
-    eH = H.edges
-    R = Graph(False, lenG + lenH)
+# def disjointUnionCata(G, H): #test for large instances
+#     lenG = len(G.vertices)
+#     lenH = len(H.vertices)
+#     eG = G.edges
+#     eH = H.edges
+#     R = Graph(False, lenG + lenH)
+#
+#     for i in range(lenG):
+#         for j in range(i, lenG):
+#             if G.vertices[i].is_adjacent(G.vertices[j]):
+#                 edge_g = Edge(G.vertices[i], G.vertices[j])
+#
+#                 for e in eG:
+#                     if edge_g.tail == e.tail and edge_g.head == e.head:
+#                         edge = Edge(R.vertices[j], R.vertices[i])
+#                         R.add_edge(edge)
+#                         # print("!G: connect edge {} and edge {}".format(j, i))
+#                     elif edge_g.tail == e.head and edge_g.head == e.tail:
+#                         edge = Edge(R.vertices[i], R.vertices[j])
+#                         R.add_edge(edge)
+#                         # print("G: connect edge {} and edge {}".format(i, j))
+#
+#     for i in range(lenH):
+#         for j in range(i, lenH):
+#             if H.vertices[i].is_adjacent(H.vertices[j]):
+#                 edge_h = Edge(H.vertices[i], H.vertices[j])
+#
+#                 for e in eH:
+#                     if edge_h.tail == e.tail and edge_h.head == e.head:
+#                         edge = Edge(R.vertices[lenG + j], R.vertices[lenG + i])
+#                         R.add_edge(edge)
+#                         # print("!H: connect edge {} and edge {}".format(j, i))
+#                     elif edge_h.tail == e.head and edge_h.head == e.tail:
+#                         edge = Edge(R.vertices[lenG + i], R.vertices[lenG + j])
+#                         R.add_edge(edge)
+#                         # print("H: connect edge {} and edge {}".format(i, j))
+#
+#     return R
 
-    for i in range(lenG):
-        for j in range(i, lenG):
-            if self.vertices[i].is_adjacent(self.vertices[j]):
-                edge_g = Edge(self.vertices[i], self.vertices[j])
-
-                for e in eG:
-                    if edge_g.tail == e.tail and edge_g.head == e.head:
-                        edge = Edge(R.vertices[j], R.vertices[i])
-                        R.add_edge(edge)
-                        # print("!G: connect edge {} and edge {}".format(j, i))
-                    elif edge_g.tail == e.head and edge_g.head == e.tail:
-                        edge = Edge(R.vertices[i], R.vertices[j])
-                        R.add_edge(edge)
-                        # print("G: connect edge {} and edge {}".format(i, j))
-
-    for i in range(lenH):
-        for j in range(i, lenH):
-            if H.vertices[i].is_adjacent(H.vertices[j]):
-                edge_h = Edge(H.vertices[i], H.vertices[j])
-
-                for e in eH:
-                    if edge_h.tail == e.tail and edge_h.head == e.head:
-                        edge = Edge(R.vertices[lenG + j], R.vertices[lenG + i])
-                        R.add_edge(edge)
-                        # print("!H: connect edge {} and edge {}".format(j, i))
-                    elif edge_h.tail == e.head and edge_h.head == e.tail:
-                        edge = Edge(R.vertices[lenG + i], R.vertices[lenG + j])
-                        R.add_edge(edge)
-                        # print("H: connect edge {} and edge {}".format(i, j))
-
-    return R
-
-
-def get_vertex_by_label(G, label):
-    for i in G.vertices:
-        if i.label == label:
-            return i
+def disjointUnion(G, H):
+    lenG = len(G)
+    for vertex in H.vertices:
+        newVertex = Vertex(G)
+        G.add_vertex(newVertex)
+    for edge in H.edges:
+        head = G.vertices[edge.head.label + lenG]
+        tail = G.vertices[edge.tail.label + lenG]
+        newEdge = Edge(tail, head)
+        G.add_edge(newEdge)
+    return G
 
 def bijection(f):
     for i in range(len(f)):
@@ -61,6 +66,25 @@ def balanced(f):
         if f[i] % 2 == 1:
             return 0
     return 1
+
+def frequencies(colorings):
+    maxvalue = -1
+    frequency = [0] * (len(colorings))
+    for i in colorings:
+        maxvalue = max(maxvalue, i)
+        frequency[i] += 1
+    frequency = frequency[:maxvalue + 1]
+
+    return frequency
+
+    # maxvalue = -1
+    # for i in colorings:
+    #     maxvalue = max(maxvalue, i)
+    # frequency1 = [0]*(maxvalue + 1)
+    #
+    # for i in colorings:
+    #     frequency1[i] += 1
+    # return frequency1
 
 
 def count_isomorphism(G, D, I):
@@ -129,4 +153,4 @@ def test_countIsomorphism():
 
 
 
-test_countIsomorphism()
+# test_countIsomorphism()
