@@ -3,45 +3,6 @@ import math
 from graph_io import *
 from refined_colouring import *
 
-# def disjointUnionCata(G, H): #test for large instances
-#     lenG = len(G.vertices)
-#     lenH = len(H.vertices)
-#     eG = G.edges
-#     eH = H.edges
-#     R = Graph(False, lenG + lenH)
-#
-#     for i in range(lenG):
-#         for j in range(i, lenG):
-#             if G.vertices[i].is_adjacent(G.vertices[j]):
-#                 edge_g = Edge(G.vertices[i], G.vertices[j])
-#
-#                 for e in eG:
-#                     if edge_g.tail == e.tail and edge_g.head == e.head:
-#                         edge = Edge(R.vertices[j], R.vertices[i])
-#                         R.add_edge(edge)
-#                         # print("!G: connect edge {} and edge {}".format(j, i))
-#                     elif edge_g.tail == e.head and edge_g.head == e.tail:
-#                         edge = Edge(R.vertices[i], R.vertices[j])
-#                         R.add_edge(edge)
-#                         # print("G: connect edge {} and edge {}".format(i, j))
-#
-#     for i in range(lenH):
-#         for j in range(i, lenH):
-#             if H.vertices[i].is_adjacent(H.vertices[j]):
-#                 edge_h = Edge(H.vertices[i], H.vertices[j])
-#
-#                 for e in eH:
-#                     if edge_h.tail == e.tail and edge_h.head == e.head:
-#                         edge = Edge(R.vertices[lenG + j], R.vertices[lenG + i])
-#                         R.add_edge(edge)
-#                         # print("!H: connect edge {} and edge {}".format(j, i))
-#                     elif edge_h.tail == e.head and edge_h.head == e.tail:
-#                         edge = Edge(R.vertices[lenG + i], R.vertices[lenG + j])
-#                         R.add_edge(edge)
-#                         # print("H: connect edge {} and edge {}".format(i, j))
-#
-#     return R
-
 def disjointUnion(G, H):
     lenG = len(G)
     for vertex in H.vertices:
@@ -77,15 +38,12 @@ def frequencies(colorings):
 
     return frequency
 
-    # maxvalue = -1
-    # for i in colorings:
-    #     maxvalue = max(maxvalue, i)
-    # frequency1 = [0]*(maxvalue + 1)
-    #
-    # for i in colorings:
-    #     frequency1[i] += 1
-    # return frequency1
-
+# def trivial(D, I):
+#     lenD = len(D)
+#     for i in range(lenD - 1, -1, -1):
+#         if D[i] != I[i]:
+#             return False
+#     return True
 
 def count_isomorphism(G, D, I):
     max_color = 1
@@ -105,9 +63,13 @@ def count_isomorphism(G, D, I):
     frequency = frequencies(colorings)
 
     if not balanced(frequency):
+        # return 0, 0
         return 0
 
     if bijection(frequency):
+        # if trivial(D, I):
+        #     return 1, 0
+        # return 1, 1
         return 1
 
     chosenColor = -1
@@ -118,27 +80,31 @@ def count_isomorphism(G, D, I):
     num = 0
 
     chosenVertex = None
+    lenG = len(G.vertices)
     for i in range(len(colorings)):
-        if colorings[i] == chosenColor and i >= 0 and i < len(G.vertices)//2:
-            # vertex = get_vertex_by_label(A, i)
+        if colorings[i] == chosenColor and i >= 0 and i < lenG//2:
             vertex = G.vertices[i]
             if vertex not in D:
                 chosenVertex = vertex
                 D.append(vertex)
                 break
 
-    # print(chosenVertex)
     for i in range(len(colorings)):
-        if colorings[i] == chosenColor and i >= len(G.vertices)//2 and i < len(G.vertices):
-            # vertex = get_vertex_by_label(B, i)
+        if colorings[i] == chosenColor and i >= lenG//2 and i < lenG:
             vertex = G.vertices[i]
             if vertex not in I:
                 if vertex.degree == chosenVertex.degree:
                     I.append(vertex)
-                    num = num + count_isomorphism(G, D, I)
+                    # res, trivialJump = count_isomorphism(G, D, I)
+                    res = count_isomorphism(G, D, I)
+                    num += res
+                    # if trivialJump:
+                    #     if not trivial(D, I):
+                    #         I.remove(vertex)
+                    #         break
                     I.remove(vertex)
-
     D.remove(chosenVertex)
+    # return num, trivialJump
     return num
 
 
