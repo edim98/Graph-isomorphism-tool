@@ -3,48 +3,44 @@ from basicpermutationgroup import *
 from permutation.ex5 import period2 as period
 from graph import *
 from coloring import frequencies
-from individualization import balanced, bijection
+from individualization import balanced, bijection, disjointUnion
 from refined_colouring import refine_colour
+from preprocessing import removeNoDegrees
 
-def compute_order(H, G):
-    alpha = None
-    order_alpha = -1
-    k = len(H)
-    if k == 1:
-        return period(list(H[0]))
-    for v in G.vertices:
-        alpha_H = Orbit(H, v.label)
-        if len(alpha_H) >= 2:
-            order_alpha = len(alpha_H)
-            alpha = v.label
-            break
+def compute_order(H):
+    if len(H) == 1 and H[0].istrivial():
+        return 1
+    alpha = FindNonTrivialOrbit(H)
+    if alpha is not None:
+        orbitAlpha = Orbit(H, alpha, returntransversal = False)
+        stabilizerAlpha = Stabilizer(H, alpha)
+        orderOrbit = len(orbitAlpha)
+        if len(stabilizerAlpha) == 0:
+            return orderOrbit
+        else:
+            return orderOrbit * compute_order(stabilizerAlpha)
 
-    H_alpha = Stabilizer(H, alpha)
-    return order_alpha * compute_order(H_alpha, G)
-
-
-def is_permutation_new(f, H, G):
-
+def is_permutation_new(f, H):
+    if len(H) == 0:
+        return f.istrivial()
     if f.istrivial():
+        return True
+    if len(H) == 1 and H[0].istrivial():
         return False
-    # if len(H)==1 and H[0].istrivial():
-    #     if f.istrivial():
-    #         return False
-    #     return True
 
-    for v in G.vertices:
-        alpha_H, transversal = Orbit(H, v.label, returntransversal = True)
-        if len(alpha_H) >= 2:
-            alpha = v.label
-            beta = f[alpha]
-            if beta not in alpha_H:
-                return True
-            else:
-                for perm in transversal:
-                    if perm[alpha] == beta:
-                        composition = -perm * f
-                        H_alpha = Stabilizer(H, alpha)
-                        return is_permutation_new(composition, H_alpha, G)
+    alpha = FindNonTrivialOrbit(H)
+    orbit, transversal = Orbit(H, alpha, returntransversal = True)
+    beta = f.P[alpha]
+
+    if beta not in orbit:
+        return False
+    else:
+        stabilizerAlpha = Stabilizer(H, alpha)
+        u = transversal[orbit.index(beta)]
+        inverseOfU = -u
+        newPerm = inverseOfU * f
+
+        return is_permutation_new(newPerm, stabilizerAlpha)
 
 def create_permutation(lenG, dll):
     lenDll = len(dll)
@@ -63,7 +59,7 @@ def create_permutation(lenG, dll):
 
 
 
-def generateAutomorphism(G, D, I, X, trivial, simpleG):
+def generateAutomorphism(G, D, I, X, lenSimpleG, trivial):
     max_color = 1
     colorings = [0] * len(G.vertices)
     dll = None
@@ -85,16 +81,13 @@ def generateAutomorphism(G, D, I, X, trivial, simpleG):
         return False
 
     if bijection(frequency): # follows (D, I)
-        f = create_permutation(len(simpleG), dll)
+        f = create_permutation(lenSimpleG, dll)
         if f is None:
             return False
-        # elif f.istrivial():
-            # return True
-        if len(X) == 0 or (len(X) == 1 and X[0].istrivial()):
+        elif not is_permutation_new(f, X):
             X.append(f)
-        elif is_permutation_new(f, X, simpleG):
-            X.append(f)
-        return True
+            return True
+        return False
 
     chosenColor = -1
     for i in range(len(frequency)):
@@ -112,21 +105,30 @@ def generateAutomorphism(G, D, I, X, trivial, simpleG):
                 D.append(vertex)
                 break
 
+    returnToAncestor = False
     for i in range(lenG//2, lenG):
         if colorings[i] == chosenColor:
             vertex = G.vertices[i]
             if vertex not in I:
                 if vertex.degree == chosenVertex.degree:
                     I.append(vertex)
-                    generateAutomorphism(G, D, I, X, False, simpleG)
-                    # if vertex.label - lenG //2 != chosenVertex.label: # if we choose a mapping x -> y
-                        # returnToAncestor = generateAutomorphism(G, D, I, X, False)
+                    if vertex.label % lenSimpleG != chosenVertex.label % lenSimpleG:
+                        # currentTrivial = False
+                        returnToAncestor = generateAutomorphism(G, D, I, X, lenSimpleG, False)
+                    else:
+                        # currentTrivial = True
+                        returnToAncestor = generateAutomorphism(G, D, I, X, lenSimpleG, True)
 
-                    # else: # if we choose a mapping x -> x
-                    #     returnToAncestor = generateAutomorphism(G, D, I, X, True)
+                    # returnToAncestor = generateAutomorphism(G, D, I, X, lenSimpleG)
                     I.remove(vertex)
-                    # if returnToAncestor and not trivial:
-                    #     break
+                    if returnToAncestor and not trivial:
+                        break
     D.remove(chosenVertex)
-    return False
-    # return returnToAncestor
+    return returnToAncestor
+
+def countAutomorphism(g1, g2):
+    G = disjointUnion(g1, g2)
+    X = []
+    removeNoDegrees(G)
+    generateAutomorphism(G, [], [], X, len(g2), True)
+    return compute_order(X)
