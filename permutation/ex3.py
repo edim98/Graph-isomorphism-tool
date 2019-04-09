@@ -9,4 +9,4 @@ def inverse(p):
     return res
 
 p = [2, 1, 3, 0]
-print(inverse(p))
+# print(inverse(p))
