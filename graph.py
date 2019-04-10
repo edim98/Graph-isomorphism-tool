@@ -6,9 +6,12 @@ This is a module for working with directed and undirected multigraphs.
 
 from typing import List, Union, Set
 
+<<<<<<< HEAD
 # from graphs import ex1
 # from graphs.graph_io import *
 
+=======
+>>>>>>> 79a182ed200abee5f8c2fb85d338276d6882c32a
 
 class GraphError(Exception):
     """
@@ -106,10 +109,14 @@ class Vertex(object):
     def neighbours(self) -> List["Vertex"]:
         """
 <<<<<<< HEAD
+<<<<<<< HEAD
         Returns the list of neighbours of the vertex.
 =======
         Returns the list of neighbors of the vertex.
 >>>>>>> a147d8d5f4d16f47aa39dc24e24b21f44ef1c68a
+=======
+        Returns the list of neighbours of the vertex.
+>>>>>>> 79a182ed200abee5f8c2fb85d338276d6882c32a
         """
         return list(self._incidence.keys())
 
@@ -420,7 +427,10 @@ class UnsafeGraph(Graph):
 
     def is_adjacent(self, u: "Vertex", v: "Vertex") -> bool:
         return v in u._incidence or (not self._directed and u in v._incidence)
+<<<<<<< HEAD
 
+=======
+>>>>>>> 79a182ed200abee5f8c2fb85d338276d6882c32a
 
 def __add__(G, H):
     lenG = len(G.vertices)
