@@ -6,12 +6,9 @@ This is a module for working with directed and undirected multigraphs.
 
 from typing import List, Union, Set
 
-<<<<<<< HEAD
 # from graphs import ex1
 # from graphs.graph_io import *
 
-=======
->>>>>>> 79a182ed200abee5f8c2fb85d338276d6882c32a
 
 class GraphError(Exception):
     """
@@ -427,10 +424,7 @@ class UnsafeGraph(Graph):
 
     def is_adjacent(self, u: "Vertex", v: "Vertex") -> bool:
         return v in u._incidence or (not self._directed and u in v._incidence)
-<<<<<<< HEAD
 
-=======
->>>>>>> 79a182ed200abee5f8c2fb85d338276d6882c32a
 
 def __add__(G, H):
     lenG = len(G.vertices)
@@ -502,3 +496,4 @@ def __add__(G, H):
 #     R = G + H
 #     print("Vertices: {} \nEdges: {}".format(R.vertices, R.edges))
 #     print(R)
+

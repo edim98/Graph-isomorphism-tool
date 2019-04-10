@@ -1,7 +1,7 @@
 """
 This module contains some basic permutation group algorithms, for:
 
--computing orbits and transversals, 
+-computing orbits and transversals,
 -computing generators for a stabilizer, and
 -reducing a generating set to an equivalent one of at most quadratic size.
 
@@ -26,15 +26,15 @@ def Orbit(generators,el,returntransversal=False):
 	<generators> should be a Python list of permutations (from permv2.py), which
 	represent a generating set of a permutation group H.
 	<el> is an element of the ground set (which should be from 0...n-1).
-	
+
 	This function returns the orbit <O> of <el> in group H, as a python list.
-	
+
 	If <returntransversal> = True, it also returns a transversal <U>, which is
 	an equal length python list:
 	For every index i, U[i] is a permutation from H that maps <el> to O[i].
-	
+
 	(The lists O and U are returned as a 2-tuple.)
-	
+
 	See the lecture slides for this algorithm in pseudocode, and an example.
 	"""
 	O=[el]
@@ -62,12 +62,12 @@ def Orbit(generators,el,returntransversal=False):
 		return O,U
 	else:
 		return O
-	
+
 def SchreierGenerators(generators,el):
 	"""
 	(Mostly for internal use.)
 	Given a generating set <generators> (a Python list containing permutations) that
-	generate a group H, and an element <el> (from the ground set 0...n-1), 
+	generate a group H, and an element <el> (from the ground set 0...n-1),
 	this function returns a number of permutations that are in the <el>-stabilizer subgroup
 	of H, which is in fact a generating set for this stabilizer subgroup.
 	This may be a long list, which may even contain duplicates.
@@ -101,9 +101,9 @@ def FindNonTrivialOrbit(generators):
 
 def Reduce(generators,wordy=0):
 	"""
-	Given a generating set <generators> (a Python list containing permutations) that 
+	Given a generating set <generators> (a Python list containing permutations) that
 	generates a group H, this function returns a possibly smaller generating set for the
-	same group H (but certainly not larger). 
+	same group H (but certainly not larger).
 	The resulting generating set will contain less than n^2
 	permutations, when the permutations are on n elements.
 	(Set <wordy> =1 or 2 to see what is going on exactly.)
@@ -117,7 +117,7 @@ def Reduce(generators,wordy=0):
 	todo=generators
 	while todo!=[]:
 		el=FindNonTrivialOrbit(todo)
-		if el==None:	# can happen if the input (erroneously) contains trivial permutations
+		if el is None:	# can happen if the input (erroneously) contains trivial permutations
 			break
 		if wordy>=2:
 			print("    Next iteration: still to reduce:\n     ",todo)
@@ -127,7 +127,7 @@ def Reduce(generators,wordy=0):
 		for P in todo:
 			if P[el]==el:
 				todonext.append(P)
-			elif images[P[el]]==None:
+			elif images[P[el]] is None:
 				if wordy>=2:
 					print("      Keeping",P,"which maps",el,"to",P[el])
 				outputgenerators.append(P)
@@ -149,9 +149,8 @@ def Stabilizer(generators,el):
 	<generators> should be a python list containing permutations (from permv2.py),
 	which is viewed as a generating set for a group H.
 	<el> should be an element from 0...n-1 (the ground set for the permutations).
-	
+
 	This function returns a generating set for H_{el}, the stabilizer subgroup of H
 	for element <el>. The generating set has size less than n^2.
 	"""
 	return Reduce(SchreierGenerators(generators,el),0)
-

@@ -2,6 +2,7 @@ import math
 
 from graph_io import *
 from refined_colouring import *
+from preprocessing import removeNoDegrees
 
 def disjointUnion(G, H):
     lenG = len(G)
@@ -48,6 +49,7 @@ def frequencies(colorings):
 def count_isomorphism(G, D, I):
     max_color = 1
     colorings = [0] * len(G.vertices)
+    dll = None
     if D != [] and I != []:
         for i in D:
             colorings[i.label] = max_color
@@ -58,7 +60,7 @@ def count_isomorphism(G, D, I):
         for j in I:
             colorings[j.label] = max_color
             max_color += 1
-        colorings = refine_colour(G, colorings)
+        colorings, dll = refine_colour(G, colorings)
 
     frequency = frequencies(colorings)
 
@@ -97,7 +99,8 @@ def count_isomorphism(G, D, I):
                     I.append(vertex)
                     # res, trivialJump = count_isomorphism(G, D, I)
                     res = count_isomorphism(G, D, I)
-                    num += res
+                    if res == 1:
+                        return res
                     # if trivialJump:
                     #     if not trivial(D, I):
                     #         I.remove(vertex)
@@ -108,14 +111,10 @@ def count_isomorphism(G, D, I):
     return num
 
 
-def test_countIsomorphism():
-
-    with open("cubes3.grl") as f:
-        G = load_graph(f, read_list = True)
-    L = G[0][0]
-    H = G[0][0]
-    G = disjointUnion(L, H)
-    print("Number of isomorphisms found: {}".format(count_isomorphism(G, [], [])))
+def testIsomorphism(g1, g2):
+    G = disjointUnion(g1, g2)
+    removeNoDegrees(G)
+    return count_isomorphism(G, [], [])
 
 
 
