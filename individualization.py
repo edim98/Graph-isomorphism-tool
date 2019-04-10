@@ -1,139 +1,121 @@
 import math
 
 from graph_io import *
-from coloring import *
 from refined_colouring import *
+from preprocessing import removeNoDegrees
 
-def disjointUnion(self, H):
-    lenG = len(self.vertices)
-    lenH = len(H.vertices)
-    eG = self.edges
-    eH = H.edges
-    R = Graph(False, lenG + lenH)
+def disjointUnion(G, H):
+    lenG = len(G)
+    for vertex in H.vertices:
+        newVertex = Vertex(G)
+        G.add_vertex(newVertex)
+    for edge in H.edges:
+        head = G.vertices[edge.head.label + lenG]
+        tail = G.vertices[edge.tail.label + lenG]
+        newEdge = Edge(tail, head)
+        G.add_edge(newEdge)
+    return G
 
-    for i in range(lenG):
-        for j in range(i, lenG):
-            if self.vertices[i].is_adjacent(self.vertices[j]):
-                edge_g = Edge(self.vertices[i], self.vertices[j])
-
-                for e in eG:
-                    if edge_g.tail == e.tail and edge_g.head == e.head:
-                        edge = Edge(R.vertices[j], R.vertices[i])
-                        R.add_edge(edge)
-                        # print("!G: connect edge {} and edge {}".format(j, i))
-                    elif edge_g.tail == e.head and edge_g.head == e.tail:
-                        edge = Edge(R.vertices[i], R.vertices[j])
-                        R.add_edge(edge)
-                        # print("G: connect edge {} and edge {}".format(i, j))
-
-    for i in range(lenH):
-        for j in range(i, lenH):
-            if H.vertices[i].is_adjacent(H.vertices[j]):
-                edge_h = Edge(H.vertices[i], H.vertices[j])
-
-                for e in eH:
-                    if edge_h.tail == e.tail and edge_h.head == e.head:
-                        edge = Edge(R.vertices[lenG + j], R.vertices[lenG + i])
-                        R.add_edge(edge)
-                        # print("!H: connect edge {} and edge {}".format(j, i))
-                    elif edge_h.tail == e.head and edge_h.head == e.tail:
-                        edge = Edge(R.vertices[lenG + i], R.vertices[lenG + j])
-                        R.add_edge(edge)
-                        # print("H: connect edge {} and edge {}".format(i, j))
-
-    return R
-
-
-def get_vertex_by_label(G, label):
-    for i in G.vertices:
-        if i.label == label:
-            return i
-
-def bijection(f1, f2):
-    for i in range(1, len(f1)):
-        if (f1[i] + f2[i]) != 2:
+def bijection(f):
+    for i in range(len(f)):
+        if f[i] != 2:
             return False
     return True
 
 
-def balanced(f1, f2):
-    for i in range(1, len(f1)):
-        if f1[i] != f2[i]:
+def balanced(f):
+    for i in range(len(f)):
+        if f[i] % 2 == 1:
             return 0
     return 1
 
+def frequencies(colorings):
+    maxvalue = -1
+    frequency = [0] * (len(colorings))
+    for i in colorings:
+        maxvalue = max(maxvalue, i)
+        frequency[i] += 1
+    frequency = frequency[:maxvalue + 1]
 
-def get_max_color(colorings):
-    res = []
-    maxi = -math.inf
-    for v, color in colorings.items():
-        if color not in res:
-            res.append(color)
-            if color > maxi:
-                maxi = color
-    return maxi
+    return frequency
 
+# def trivial(D, I):
+#     lenD = len(D)
+#     for i in range(lenD - 1, -1, -1):
+#         if D[i] != I[i]:
+#             return False
+#     return True
 
-def count_isomorphism(A, B, D, I):
-    max_color = 2
-    colorings1 = [0] * len(A.vertices)
-    colorings2 = [0] * len(B.vertices)
-    for i in A.vertices:
-        if i not in D:
-            colorings1[i.label] = 1
-        else:
-            colorings1[i.label] = max_color
-            max_color += 1
-    max_color = 2
-    for i in B.vertices:
-        if i not in I:
-            colorings2[i.label] = 1
-        else:
-            colorings2[i.label] = max_color
+def count_isomorphism(G, D, I):
+    max_color = 1
+    colorings = [0] * len(G.vertices)
+    dll = None
+    if D != [] and I != []:
+        for i in D:
+            colorings[i.label] = max_color
             max_color += 1
 
-    colorings1 = refine_colour(A, colorings1)
-    colorings2 = refine_colour(B, colorings2)
 
-    frequency1 = frequencies(colorings1)
-    frequency2 = frequencies(colorings2)
-    print(frequency1, frequency2)
-    # if D != [] and I != []:
-    if not balanced(frequency1, frequency2):
+        max_color = 1
+        for j in I:
+            colorings[j.label] = max_color
+            max_color += 1
+        colorings, dll = refine_colour(G, colorings)
+
+    frequency = frequencies(colorings)
+
+    if not balanced(frequency):
+        # return 0, 0
         return 0
-    if bijection(frequency1, frequency2):
+
+    if bijection(frequency):
+        # if trivial(D, I):
+        #     return 1, 0
+        # return 1, 1
         return 1
+
     chosenColor = -1
-    for i in range(1, len(frequency1)):
-        if (frequency1[i] + frequency2[i]) >= 4:
+    for i in range(len(frequency)):
+        if frequency[i] >= 4:
             chosenColor = i
             break
-    chosenVertex = None
     num = 0
-    for i in range(0, len(colorings1)):
-        if colorings1[i] == chosenColor:
-            vertex = get_vertex_by_label(A, i)
+
+    chosenVertex = None
+    lenG = len(G.vertices)
+    for i in range(len(colorings)):
+        if colorings[i] == chosenColor and i >= 0 and i < lenG//2:
+            vertex = G.vertices[i]
             if vertex not in D:
                 chosenVertex = vertex
-                D.append(chosenVertex)
+                D.append(vertex)
                 break
-    for i in range(0, len(colorings2)):
-        if colorings2[i] == chosenColor:
-            vertex = get_vertex_by_label(B, i)
+
+    for i in range(len(colorings)):
+        if colorings[i] == chosenColor and i >= lenG//2 and i < lenG:
+            vertex = G.vertices[i]
             if vertex not in I:
-                I.append(vertex)
-                num = num + count_isomorphism(A, B, D, I)
-                I.remove(vertex)
+                if vertex.degree == chosenVertex.degree:
+                    I.append(vertex)
+                    # res, trivialJump = count_isomorphism(G, D, I)
+                    res = count_isomorphism(G, D, I)
+                    if res == 1:
+                        return res
+                    # if trivialJump:
+                    #     if not trivial(D, I):
+                    #         I.remove(vertex)
+                    #         break
+                    I.remove(vertex)
     D.remove(chosenVertex)
+    # return num, trivialJump
     return num
 
 
-def test_countIsomorphism():
-    with open("cubes6.grl") as f:
-        L = load_graph(f, read_list=True)
-    g = L[0][0]
-    h = L[0][1]
-    print("Number of isomorphisms found: {}".format(count_isomorphism(g, h, [], [])))
+def testIsomorphism(g1, g2):
+    G = disjointUnion(g1, g2)
+    removeNoDegrees(G)
+    return count_isomorphism(G, [], [])
 
 
-test_countIsomorphism()
+
+# test_countIsomorphism()

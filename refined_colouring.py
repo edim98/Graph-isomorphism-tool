@@ -12,11 +12,11 @@ import time
 # * Add a main refine_colour(G) method so it can be called outside this file ?? done (hopefully)
 
 
-with open('colorref_smallexample_4_7.grl') as f:
-# with open('colorref_smallexample_6_15.grl') as f:
+# with open('colorref_smallexample_4_7.grl') as f:
+# with open('colorref_smallexample_2_49.grl') as f:
 # with open('threepaths10240.gr') as f:
-# with open('test.gr') as f:
-    Glist = load_graph(f, read_list = True)
+# # with open('test.gr') as f:
+#     Glist = load_graph(f, read_list = True)
 
 # ------- Start of Data structures -------
 pointer = []
@@ -29,10 +29,10 @@ ourQueue = Queue() # Working queue
 # ------- End of Data structures -------
 
 
-G = Glist[0][0]
-
-with open('output.dot', 'w') as g:
-    write_dot(G, g)
+# G = Glist[0][0]
+#
+# with open('output.dot', 'w') as g:
+#     write_dot(G, g)
 
 # startTime = time.time()
 
@@ -233,14 +233,17 @@ def buildQueue(dll, ourQueue, INQUEUE):
     maxsize = 0
     maxpointer = 0
     k = 0
+    diffColours = 0
     for l in dll:
         if l.size > 0:
             if maxsize < l.size:
                 maxsize = l.size
                 maxpointer = k # Keep track of the position of the dll with largest number of elements
             k += 1
+            diffColours += 1
             aux.append(l.colour) # Add each list to the queue
-    aux.pop(maxpointer) # Remove the list with largest number of elements.
+    if diffColours > 1:
+        aux.pop(maxpointer) # Remove the list with largest number of elements.
     INQUEUE[maxpointer] = 0
     for i in aux:
         INQUEUE[i] = 1 # Keep track of elements in queue
@@ -305,7 +308,34 @@ def refine(C, G): # C is a DLL
 
             # If this happens, then split up dll[colour] by adding the vertices with colour "colour" to a new DLL
 
+def dllToList(dll, G):
+    colors = [0] * (len(G.vertices))
+    for i in dll:
+        p = i.start
+        # print(p)
+        if i.size > 1:
+            while p != i.end:
+                colors[p.vertex.label] = i.colour
+                p = p.right
+            colors[p.vertex.label] = i.colour
+        elif i.size == 1:
+            colors[p.vertex.label] = i.colour
+
+    return colors
+
+
 def refine_colour(G, initial_colouring):
+    global dll
+    global INQUEUE
+    global COLOUR
+    global pointer
+    global nx
+
+    dll = []
+    INQUEUE = []
+    COLOUR = []
+    pointer = []
+    nx = []
 
     for i in range(len(G)):
         dll.append(DLL()) # Populate the empty list with DLL objects
@@ -327,17 +357,7 @@ def refine_colour(G, initial_colouring):
         # print('Refining with current colour: ', currentColour)
         refine(dll[currentColour], G)
         i = i + 1
-    colors = [0]*(len(G.vertices))
-    for i in dll:
-        p = i.start
-        # print(p)
-        if i.size > 1:
-            while p != i.end:
-                colors[p.vertex.label] = i.colour
-                p = p.right
-            colors[p.vertex.label] = i.colour
-        elif i.size == 1:
-            colors[p.vertex.label] = i.colour
 
-    return colors
-# print(refine_colour(G, []))
+    colourGraph(dll, G)
+
+    return dllToList(dll, G), dll

@@ -11,7 +11,7 @@ def validate_permutation(p):
     :param p:  The permutation to check.
     """
     if not isinstance(p, list):
-        print(p)
+        # print(p)
         raise ValueError("A permutation should be a list of integers")
 
 
