@@ -22,7 +22,7 @@ One can also run ```main.py -h``` for a reminder of this usage.
 **Important!**
 Please make sure to add the graph files (``.gr or .grl``) in a folder called ``graphs``.
 
-####Authors:
+###Authors:
 * Eduard Constantinescu - s1922629
 * Marieke Romeijn - s1992988
 * Catalin Rus - s1910426 
