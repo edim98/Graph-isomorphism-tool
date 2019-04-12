@@ -9,7 +9,9 @@
 * automorphismGenerator.py
 * permv2.py
 * basicpermutationgroup.py
-###Usage guide
+
+
+### Usage guide
 Running ``main.py`` can be done with several **required** arguments:
 * ``-i or --input_file=`` - specifies the name of the file with the extension eg. "torus24.grl" or "threepaths80.gr" (this requires that the files must have ``.gr or .grl`` extensions)
 * ```-g or --graph_iso=``` - set to 1 if you want to run the graph isomorphism test and 0 if not
@@ -22,7 +24,7 @@ One can also run ```main.py -h``` for a reminder of this usage.
 **Important!**
 Please make sure to add the graph files (``.gr or .grl``) in a folder called ``graphs``.
 
-####Authors:
+### Authors:
 * Eduard Constantinescu - s1922629
 * Marieke Romeijn - s1992988
 * Catalin Rus - s1910426 
