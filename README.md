@@ -9,6 +9,8 @@
 * automorphismGenerator.py
 * permv2.py
 * basicpermutationgroup.py
+
+
 ###Usage guide
 Running ``main.py`` can be done with several **required** arguments:
 * ``-i or --input_file=`` - specifies the name of the file with the extension eg. "torus24.grl" or "threepaths80.gr" (this requires that the files must have ``.gr or .grl`` extensions)
