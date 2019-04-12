@@ -1,99 +1,116 @@
-from graph_io import load_graph, save_graph, write_dot
 from graph import *
 from queue import Queue
-import time
 
+"""
+Fast colour refinement implementation.
+Based on the algorithm ideas of Lecture 2 & 3. 
+"""
 
-# TODO LIST:
-# * Change deletion of DLLEntry in a DLL object (use a data structure pointer where pointer[vertex] = DLLEntry which has that vertex) -- done :)
-# * Optimize methods in "graph.py" (eg. change lists to heaps)
-# * Check for redundant code
-# * Change split_on_degrees to split_on_initial_colouring (andrei's code) -- done
-# * Add a main refine_colour(G) method so it can be called outside this file ?? done (hopefully)
-
-
-# with open('colorref_smallexample_4_7.grl') as f:
-# with open('colorref_smallexample_2_49.grl') as f:
-# with open('threepaths10240.gr') as f:
-# # with open('test.gr') as f:
-#     Glist = load_graph(f, read_list = True)
 
 # ------- Start of Data structures -------
-pointer = []
-dll = [] # List of DLL objects
-nx = [] # List of neighbours
-INQUEUE = [] # Keep track of elements in queue
-COLOUR = [] # Keep track of the colour of each vertex
-ourQueue = Queue() # Working queue
+pointer = []  # List of pointers for each vertex.
+dll = []  # List of DLL objects.
+nx = []  # List of neighbours for each vertex.
+COLOUR = []  # List of colours for each vertex.
+ourQueue = Queue()  # Working queue.
 
 # ------- End of Data structures -------
 
 
-# G = Glist[0][0]
-#
-# with open('output.dot', 'w') as g:
-#     write_dot(G, g)
-
-# startTime = time.time()
-
-
-
-
-
-
 class DLLEntry(object):
+    """
+    A dynamic-linked-list entry object is used for building and working with the dynamic-linked-list object.
+    Thus, it is required to keep track of the 'left' and 'right' elements next to this entry.
+    This object is a representation of a 'state'.
+    """
 
-    # Constructor for a DLL entry
-    # Params:
-    # colour: colour of the DLLEntry
-    # state: state of the DLLEntry
-    # vertex: number of the DLLEntry vertex
     def __init__(self, colour, state, vertex):
+        """
+        Constructor of a DLLEntry object.
+        :param colour: The colour of the state.
+        :param state: The integer identifier of the state.
+        :param vertex: The Vertex object associated with this state.
+        """
+
         self._colour = colour
         self._state = state
         self._vertex = vertex
         self._left = None
         self._right = None
 
-    def set_states(self, states):
-        self._states = states
+    def set_state(self, state):
+        """
+        Basic setter for value of the state.
+        :param state: The new state value.
+        """
+        self._state = state
 
     def set_left(self, left):
+        """
+        Basic setter for the pointer to the left element.
+        :param left: The pointer to the left element.
+        """
         self._left = left
 
     def set_right(self, right):
+        """
+        Basic setter for the pointer to the right element.
+        :param right: The pointer to the right element.
+        """
         self._right = right
 
     @property
     def vertex(self):
+        """
+        Vertex property.
+        :return: The Vertex object associated with this entry.
+        """
         return self._vertex
-
-    # Return the number of states
-    @property
-    def size(self):
-        return len(self._states)
 
     @property
     def colour(self):
+        """
+        Colour property.
+        :return: The colour of this entry.
+        """
         return self._colour
 
     @property
     def state(self):
+        """
+        State property.
+        :return: The integer identifier of this entry.
+        """
         return self._state
 
     @property
     def left(self):
+        """
+        Left element property.
+        :return: A pointer to the entry found to the left of this one.
+        """
         return self._left
 
     @property
     def right(self):
+        """
+        Right element property.
+        :return: A pointer to the entry found to the right of this one.
+        """
         return self._right
 
 
 class DLL(object):
+    """
+    The dynamic-linked-list object manages several DLLEntry objects.
+    The DLL object is useful for faster insertion, deletion and moving of elements.
+    At any point in time: start.left = end AND end.right = start.
+    """
 
-    # Constructor for the Dynamic-Linked-List object
     def __init__(self):
+        """
+        Constructor of a DLL object.
+        """
         self._start = None
         self._end = None
         self._colour = None
@@ -101,34 +118,69 @@ class DLL(object):
 
     @property
     def size(self):
+        """
+        Size property.
+        :return: The number of DLLEntry objects found in this list.
+        """
         return self._size
 
     @property
     def start(self):
+        """
+        Start property.
+        :return: A pointer to the first element in the list.
+        """
         return self._start
 
     @property
     def end(self):
+        """
+        End property.
+        :return: A pointer to the last element in the list.
+        """
         return self._end
 
     @property
     def colour(self):
+        """
+        Colour property.
+        :return: The colour of this object. This colour is equal to the colour of all DLLEntry objects in this list.
+        """
         return self._colour
 
     def set_colour(self, colour):
+        """
+        Basic setter for the colour of the object.
+        :param colour: The new colour.
+        """
         self._colour = colour
 
     def set_start(self, start):
+        """
+        Basic setter for the start element of the list.
+        :param start: The pointer to the new starting element.
+        """
         self._start = start
 
     def set_end(self, end):
+        """
+        Basic setter for the end element of the list.
+        :param end: The pointer to the new ending element.
+        """
         self._end = end
 
     def set_size(self, size):
+        """
+        Basic setter for the size of the object.
+        :param size: The new size of the object.
+        """
         self._size = size
 
-    # String representation of the DLL
     def __repr__(self):
+        """
+        String representation of this object.
+        :return:
+        """
         if self.start is None:
             return ''
         s = 'Colour ' + str(self.colour) +': '
@@ -140,24 +192,29 @@ class DLL(object):
         s += str(self.end.state) + '\n'
         return s
 
-    # Removes a state from this DLL
     def remove_state(self, vertex):
+        """
+        Remove a DllEntry from this list.
+        This is done using 3 separate cases described bellow.
+        :param vertex: The Vertex to be removed.
+        """
         p = pointer[vertex.label]
-        if p is not None:
-            if self.size == 1: # If the size of the list is 1
-                self.set_start(None) # Set all fields as none
-                self.set_end(None)
-                self.set_size(0) # Set size as 0
 
-            elif self.size == 2: # If only two elements are in the list
-                self.set_start(p.right) # Set start and end at the element not deleted
+        if p is not None:
+            if self.size == 1:  # If the size of the list is 1:
+                self.set_start(None)  # Set all fields as none.
+                self.set_end(None)
+                self.set_size(0)  # Set size as 0
+
+            elif self.size == 2:  # If only two elements are in the list:
+                self.set_start(p.right)  # Set start and end at the element not deleted
                 self.set_end(p.right)
                 p.left.set_right(p.right)
                 p.right.set_left(p.left)
 
-                self.set_size(1) # Set size to 1
-            else: # Multiple elements
-                p.left.set_right(p.right) # Change left / right relationships
+                self.set_size(1)  # Set size to 1
+            else:                 # Multiple elements
+                p.left.set_right(p.right)  # Change left / right relationships
                 p.right.set_left(p.left)
                 if self.start == p:
                     self.set_start(self.start.right)
@@ -165,44 +222,50 @@ class DLL(object):
                     self.set_end(self.end.left)
                 self.set_size(self.size - 1)
 
-            p = None # Delete entry
+            p = None  # Delete entry
             pointer[vertex.label] = None
             return
 
-
-    # Adds a state to the DLL
     def add_state(self, vertex):
-        entry = DLLEntry(self.colour, vertex.label, vertex) # Create a new entry
-        COLOUR[vertex.label] = self.colour # Keep track of the vertex's colour in a separate list
+        """
+        Add a new state to this list.
+        This is done using 3 separate cases described bellow.
+        :param vertex: The Vertex to be added.
+        """
+        entry = DLLEntry(self.colour, vertex.label, vertex)  # Create a new DLLEntry for this Vertex.
+        COLOUR[vertex.label] = self.colour  # Keep track of the vertex's colour in a separate list.
 
-        if self.start is None: # If the list is empty
-            entry.set_right(entry) # Set the left most and right most entry as this new one.
+        if self.start is None:  # If the list is empty:
+            entry.set_right(entry)  # Set the left most and right most entry as this new one.
             entry.set_left(entry)
 
             self._start = entry
             self._end = entry
 
-        elif self.end == self.start: # If there is only one element
-            entry.set_left(self.start) # Set the left and right of this entry to the start
+        elif self.end == self.start:  # If there is only one element:
+            entry.set_left(self.start)  # Set the left and right of this entry to the start.
             entry.set_right(self.start)
 
             self.start.set_left(entry)
             self.start.set_right(entry)
 
-            self._end = entry # The end is now the new entry
+            self._end = entry  # The end is now the new entry.
 
-        else: # If there are multiple entries
-            entry.set_left(self.end) # Set left to end, right to start
+        else:  # If there are multiple entries:
+            entry.set_left(self.end)  # Set left to end, right to start.
             entry.set_right(self.start)
             self.end.set_right(entry)
             self.start.set_left(entry)
-            self._end = entry # The end is now the new entry.
+            self._end = entry  # The end is now the new entry.
 
-        self._size += 1 # Increment size of DLL
+        self._size += 1  # Increment size of DLL
         pointer[vertex.label] = entry
 
-    # Return the states of this list
     def get_states(self):
+        """
+        Get this object's states.
+        :return: A list of Vertex objects which are found in this object.
+        """
         res = []
         p = self.start
         while p != self.end:
@@ -211,24 +274,39 @@ class DLL(object):
         res.append(self.end)
         return res
 
-# Split the vertices on initial colouring (based on Andrei's code)
+
 def split_on_initial_colouring(dll, graph, initial_colouring):
-    if initial_colouring == []:
-        for i in graph.vertices: # Split the nodes on their degree.
+    """
+    Arbitrarily split the vertices in different colour classes.
+    If no initial colouring is provided, the vertices will be split based on their degrees.
+    :param dll: An array of differently coloured DLL objects.
+    :param graph: The given graph.
+    :param initial_colouring: An array of colour such that the 'i-th' vertex has colour initial_colouring[i].
+    """
+    if initial_colouring == []:  # Check if any initial colouring was provided.
+        for i in graph.vertices:  # Split the nodes on their degree.
             degree = i.degree
-            dll[degree].add_state(i) # Add this vertix to the dll with colour "degree"
-    else: # Split the nodes on initial colouring
+            dll[degree].add_state(i)  # Add this vertex to the DLL with colour 'degree'.
+    else:  # Split the nodes on initial colouring.
         for i in range(len(initial_colouring)):
             dll[initial_colouring[i]].add_state(graph.vertices[i])
 
 
-# Build the "nx" list - keep track of the list of neighbours for each vertix
 def build_nx(graph):
+    """
+    Build the neighbour list for each vertex.
+    :param graph: The given graph.
+    """
     for i in graph.vertices:
         nx[i.label] = i.neighbours
 
-# Build our working queue
-def buildQueue(dll, ourQueue, INQUEUE):
+
+def buildQueue(dll, ourQueue):
+    """
+    Build the working queue.
+    :param dll: An array of differently coloured DLL objects.
+    :param ourQueue: An empty Queue object.
+    """
     aux = []
     maxsize = 0
     maxpointer = 0
@@ -238,35 +316,49 @@ def buildQueue(dll, ourQueue, INQUEUE):
         if l.size > 0:
             if maxsize < l.size:
                 maxsize = l.size
-                maxpointer = k # Keep track of the position of the dll with largest number of elements
+                maxpointer = k  # Keep track of the position of the dll with largest number of elements
             k += 1
             diffColours += 1
-            aux.append(l.colour) # Add each list to the queue
+            aux.append(l.colour)  # Add each list to the queue
     if diffColours > 1:
-        aux.pop(maxpointer) # Remove the list with largest number of elements.
-    INQUEUE[maxpointer] = 0
+        aux.pop(maxpointer)  # Remove the list with largest number of elements.
     for i in aux:
-        INQUEUE[i] = 1 # Keep track of elements in queue
         ourQueue.put(i)
 
-# Print the DLL objects in a nice way :)
+
 def nicePrinting(dll):
+    """
+    An attempt to print the list of DLL objects in a nice manner.
+    :param dll: An array of differently coloured DLL objects.
+    """
     for d in dll:
         if d.size > 0:
             print(d)
 
+
 def colourGraph(dll, G):
+    """
+    Colour the vertex of the graph by setting their 'colour' property.
+    This is intended for testing purposes only.
+    :param dll: An array of differently coloured DLL objects.
+    :param G: The given graph.
+    :return: The coloured graph.
+    """
     for d in dll:
         if d.size > 0:
             p = d.start
             while p != d.end:
                 G.vertices[p.state].colornum = d.colour
-                # print(G.vertices[p.state-1].colornum)
                 p = p.right
             G.vertices[d.end.state].colornum = d.colour
     return G
 
+
 def smallest_free_colour():
+    """
+    Find the smallest free colour available.
+    :return: Such a colour if it was found. If not, create a new colour and return that one.
+    """
     for d in dll:
         if d.size == 0 and d.colour != 0:
             return d.colour
@@ -276,11 +368,16 @@ def smallest_free_colour():
     return length - 1
 
 
-def refine(C, G): # C is a DLL
-    states = C.get_states()
+def refine(C, G):
+    """
+    Refine a colour class.
+    :param C: A DLL object representing a colour class.
+    :param G: The given graph.
+    """
+    states = C.get_states()  # Retrieve the states of this colour class.
     L = []
     visited = []
-    A = [0]*(len(G))
+    A = [0]*(len(G) + 1)
     for q in states:
         neighbours = nx[q.vertex.label]
         for n in neighbours:
@@ -291,24 +388,29 @@ def refine(C, G): # C is a DLL
                     A[COLOUR[n.label]] += 1
                 if n not in visited:
                     visited.append(n)
-                    A[COLOUR[n.label]] += 1 # !!! Check to not count duplicates
+                    A[COLOUR[n.label]] += 1
 
     for colour in L:
-        if A[colour] < dll[colour].size: # Split up "colour"
-             l = smallest_free_colour() # Get the smallest free colour
-             for v in visited: # Iterate over found neighbours
-                 if COLOUR[v.label] == colour: # Check that they belong to the respective colour class
-                     dll[colour].remove_state(v)
-                     dll[l].add_state(v) # Add vertex to the DLL object
+        if A[colour] < dll[colour].size:  # Split up the colour class.
+             l = smallest_free_colour()  # Get the smallest free colour.
+             for v in visited:  # Iterate over found neighbours.
+                 if COLOUR[v.label] == colour:  # Check that they belong to the respective colour class.
+                     dll[colour].remove_state(v)  # Remove the vertex from the old colour class.
+                     dll[l].add_state(v)  # Add vertex to the new colour class.
              if dll[colour].size < dll[l].size:
                  ourQueue.put(colour)
              else:
                  ourQueue.put(l)
 
 
-            # If this happens, then split up dll[colour] by adding the vertices with colour "colour" to a new DLL
-
 def dllToList(dll, G):
+    """
+    Transform the list of DLL objects to a an array of colours.
+    This is intended for testing purposes only.
+    :param dll: An array of differently coloured DLL objects.
+    :param G: The given graph.
+    :return: An array of colours representing the list of DLL objects.
+    """
     colors = [0] * (len(G.vertices))
     for i in dll:
         p = i.start
@@ -326,38 +428,32 @@ def dllToList(dll, G):
 
 def refine_colour(G, initial_colouring):
     global dll
-    global INQUEUE
     global COLOUR
     global pointer
     global nx
 
     dll = []
-    INQUEUE = []
     COLOUR = []
     pointer = []
     nx = []
 
     for i in range(len(G)):
-        dll.append(DLL()) # Populate the empty list with DLL objects
-        dll[i].set_colour(i) # Set the colour of each DLL object
-        INQUEUE.append(0)
-        COLOUR.append(-1)
-        pointer.append(None)
-        nx.append(None)
+        dll.append(DLL())  # Build the empty list of DLL objects.
+        dll[i].set_colour(i)  # Set the colour of each DLL object.
+        COLOUR.append(-1)  # Initialise the list of colours.
+        pointer.append(None)  # Initialise the list of pointers.
+        nx.append(None)   # Initialise the list of neighbours.
 
-    split_on_initial_colouring(dll, G, initial_colouring) # Add vertices based on degrees
+    split_on_initial_colouring(dll, G, initial_colouring)
 
-    build_nx(G) # Construct the list of neighbours for each vertix
+    build_nx(G)
 
-    buildQueue(dll, ourQueue, INQUEUE)
+    buildQueue(dll, ourQueue)
 
-    i = 1
     while not ourQueue.empty():
         currentColour = ourQueue.get()
-        # print('Refining with current colour: ', currentColour)
         refine(dll[currentColour], G)
-        i = i + 1
 
-    colourGraph(dll, G)
+    # colourGraph(dll, G)
 
-    return dllToList(dll, G), dll
+    return COLOUR, dll
